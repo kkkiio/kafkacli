@@ -1,0 +1,14 @@
+{
+  "is-main": true,
+  "import": [
+    "kkkiio/kafka-cli/lib",
+    "Yoorkin/ArgParser",
+    "moonbitlang/x/sys",
+    "moonbitlang/x/fs"
+  ],
+  "link": {
+    "native": {
+      "cc-link-flags": "-lpthread -lz -lssl -lrdkafka"
+    }
+  }
+}

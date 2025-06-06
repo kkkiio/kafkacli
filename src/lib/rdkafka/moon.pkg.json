@@ -1,0 +1,8 @@
+{
+    "native-stub": [
+        "rdkafka_ffi.c"
+    ],
+    "link": {
+        "native": {}
+    }
+}
