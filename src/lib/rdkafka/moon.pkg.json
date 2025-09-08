@@ -3,6 +3,9 @@
         "rdkafka_ffi.c"
     ],
     "link": {
-        "native": {}
+        "native": {
+            // "stub-cc-flags": "-I/opt/homebrew/Cellar/librdkafka/2.10.0/include -I/opt/homebrew/Cellar/openssl@3/3.5.0/include -I/opt/homebrew/opt/zstd/include -I/opt/homebrew/opt/lz4/include"
+            "stub-cc-flags": "`pkg-config --cflags rdkafka`"
+        }
     }
 }

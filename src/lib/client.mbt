@@ -4,7 +4,7 @@ pub fn set_conf(
   name : String,
   value : String,
   errstr_buf : Bytes
-) -> Unit!RdKafkaConfError {
+) -> Unit raise RdKafkaConfError {
   match
     @rdkafka.rd_kafka_conf_set(
       @rdkafka.rd_kafka_conf_ref_get(conf),
@@ -30,7 +30,7 @@ pub fn set_conf(
 }
 
 ///|
-type! RdKafkaConfError {
+suberror RdKafkaConfError {
   UnknownConfig(name~ : String, errstr~ : String)
   InvalidConfigValue(name~ : String, value~ : String, errstr~ : String)
 }

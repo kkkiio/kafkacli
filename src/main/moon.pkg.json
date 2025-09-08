@@ -8,7 +8,7 @@
   ],
   "link": {
     "native": {
-      "cc-link-flags": "-lpthread -lz -lssl -lrdkafka"
+      "cc-link-flags": "`pkg-config --libs rdkafka openssl` -lpthread -lz"
     }
   }
 }
