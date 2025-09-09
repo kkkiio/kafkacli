@@ -17,14 +17,14 @@ fn main {
       let usage =
         #| Kafka consumer CLI tool
         #| usage: 
-        #|      kafka-cli consume --broker <broker> --topic <topic> --group <group> --offset <offset>
+        #|      kafka-cli consume --broker <broker> --topics <topics> --group <group> --offset <offset>
         #|
-      let topic = @ref.new("")
+      let topics = @ref.new("")
       let group = @ref.new("")
       let offset = @ref.new("")
       @ArgParser.parse(
         [
-          ("--topic", "-t", Set_string(topic), "topic"),
+          ("--topics", "-t", Set_string(topics), "topics"),
           ("--group", "-g", Set_string(group), "group"),
           ("--offset", "-o", Set_string(offset), "offset"),
         ],
@@ -32,7 +32,7 @@ fn main {
         usage,
         argv,
       )
-      let config = try load_config() catch {
+      let config = load_config() catch {
         e => {
           println("Error loading config: \{e}")
           return
@@ -57,12 +57,12 @@ fn main {
       // Assuming we use the first broker from the list for now.
       // Or handle multiple brokers appropriately, e.g., join them into a comma-separated string if your library supports it.
       let broker = broker0
-      let topic_val = match topic.val {
+      let topics_val = match topics.val {
         "" => {
-          println("Topic is required")
+          println("Topics are required")
           return
         }
-        _ => topic.val
+        _ => topics.val
       }
       let group_val = match group.val {
         "" => "test-group"
@@ -70,12 +70,18 @@ fn main {
       }
       let offset_val = match offset.val {
         "earliest" | "" => @lib.Earliest
+        "latest" => @lib.Latest
         _ => {
           println("Invalid offset: \{offset.val}")
           return
         }
       }
-      try @lib.consume!(broker, topic_val, group_val, offset_val) catch {
+      @lib.consume(
+        broker,
+        topics_val.split(",").map(_.to_string()).to_array(),
+        group_val,
+        offset_val,
+      ) catch {
         e => println("Error: \{e}")
       }
     }
@@ -84,17 +90,17 @@ fn main {
 }
 
 ///|
-fn load_config() -> @lib.Config! {
+fn load_config() -> @lib.Config raise {
   let env_vars = @sys.get_env_vars()
   let home_dir = match env_vars.get("HOME") {
     Some(path) => path
-    None => fail!("HOME environment variable not set")
+    None => fail("HOME environment variable not set")
   }
   let config_path = "\{home_dir}/.kafkacli/config.json"
   if not(@fs.path_exists(config_path)) {
-    fail!("Config file not found at \{config_path}")
+    fail("Config file not found at \{config_path}")
   }
-  let content = @fs.read_file_to_string!(config_path)
-  let json = @json.parse!(content)
-  @json.from_json!(json)
+  let content = @fs.read_file_to_string(config_path)
+  let json = @json.parse(content)
+  @json.from_json(json)
 }

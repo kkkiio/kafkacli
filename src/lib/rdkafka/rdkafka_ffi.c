@@ -99,6 +99,18 @@ MOONBIT_FFI_EXPORT int64_t rd_kafka_message_offset(rd_kafka_message_t *msg) {
     return msg->offset;
 }
 
+MOONBIT_FFI_EXPORT int rd_kafka_message_topic_name_len(rd_kafka_message_t *msg) {
+  return strlen(rd_kafka_topic_name(msg->rkt));
+}
+
+MOONBIT_FFI_EXPORT void rd_kafka_message_read_topic_name(rd_kafka_message_t *msg, char* target, size_t len) {
+  memcpy(target, rd_kafka_topic_name(msg->rkt), len);
+}
+
+MOONBIT_FFI_EXPORT int rd_kafka_message_topic_partition(rd_kafka_message_t *msg) {
+    return msg->partition;
+}
+
 // Topic partition list reference type for automatic cleanup
 struct rd_kafka_topic_partition_list_ref {
     rd_kafka_topic_partition_list_t *list;
