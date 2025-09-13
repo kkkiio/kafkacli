@@ -2,8 +2,9 @@
   "name": "kkkiio/kafka-cli",
   "version": "0.1.0",
   "deps": {
-    "Yoorkin/ArgParser": "0.1.10",
-    "moonbitlang/x": "0.4.33"
+    "Yoorkin/ArgParser": "0.1.11",
+    "moonbitlang/x": "0.4.33",
+    "illusory0x0/posix": "0.2.2"
   },
   "readme": "README.md",
   "repository": "",

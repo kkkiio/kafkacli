@@ -3,8 +3,7 @@
   "import": [
     "kkkiio/kafka-cli/lib",
     "Yoorkin/ArgParser",
-    "moonbitlang/x/sys",
-    "moonbitlang/x/fs"
+    "moonbitlang/x/sys"
   ],
   "link": {
     "native": {

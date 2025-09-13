@@ -1,6 +1,8 @@
 {
   "import": [
     "kkkiio/kafka-cli/lib/rdkafka",
-    "moonbitlang/x/encoding"
+    "moonbitlang/x/encoding",
+    "illusory0x0/posix/posix",
+    "illusory0x0/native"
   ]
 }

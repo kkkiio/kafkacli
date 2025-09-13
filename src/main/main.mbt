@@ -22,53 +22,39 @@ fn main {
       let topics = @ref.new("")
       let group = @ref.new("")
       let offset = @ref.new("")
+      let broker = @ref.new("")
       @ArgParser.parse(
         [
           ("--topics", "-t", Set_string(topics), "topics"),
           ("--group", "-g", Set_string(group), "group"),
           ("--offset", "-o", Set_string(offset), "offset"),
+          ("--broker", "-b", Set_string(broker), "broker"),
         ],
         fn(_) {  },
         usage,
         argv,
       )
-      let config = load_config() catch {
-        e => {
-          println("Error loading config: \{e}")
-          return
-        }
-      }
-      let current_context_name = config.current_context
-      let current_context = match config.contexts.get(current_context_name) {
-        Some(ctx) => ctx
-        None => {
-          println(
-            "Current context \{current_context_name} not found in config.",
-          )
-          return
-        }
-      }
-      guard current_context.brokers is [broker0, ..] else {
-        println(
-          "No brokers defined in current context \{current_context_name} and no --broker argument provided.",
-        )
-        return
-      }
       // Assuming we use the first broker from the list for now.
       // Or handle multiple brokers appropriately, e.g., join them into a comma-separated string if your library supports it.
-      let broker = broker0
-      let topics_val = match topics.val {
+      let broker = match broker.val {
+        "" => {
+          println("Broker is required")
+          return
+        }
+        _ => broker.val
+      }
+      let topics = match topics.val {
         "" => {
           println("Topics are required")
           return
         }
         _ => topics.val
       }
-      let group_val = match group.val {
+      let group = match group.val {
         "" => "test-group"
         _ => group.val
       }
-      let offset_val = match offset.val {
+      let offset = match offset.val {
         "earliest" | "" => @lib.Earliest
         "latest" => @lib.Latest
         _ => {
@@ -78,29 +64,13 @@ fn main {
       }
       @lib.consume(
         broker,
-        topics_val.split(",").map(_.to_string()).to_array(),
-        group_val,
-        offset_val,
+        topics.split(",").map(_.to_string()).to_array(),
+        group,
+        offset,
       ) catch {
         e => println("Error: \{e}")
       }
     }
     _ => println("Unknown subcommand: \{sub_command}")
   }
-}
-
-///|
-fn load_config() -> @lib.Config raise {
-  let env_vars = @sys.get_env_vars()
-  let home_dir = match env_vars.get("HOME") {
-    Some(path) => path
-    None => fail("HOME environment variable not set")
-  }
-  let config_path = "\{home_dir}/.kafkacli/config.json"
-  if not(@fs.path_exists(config_path)) {
-    fail("Config file not found at \{config_path}")
-  }
-  let content = @fs.read_file_to_string(config_path)
-  let json = @json.parse(content)
-  @json.from_json(json)
 }
