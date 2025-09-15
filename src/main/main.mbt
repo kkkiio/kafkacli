@@ -6,7 +6,7 @@ fn main {
   let usage =
     #| Kafka CLI tool
     #| usage: 
-    #|      kafka-cli <subcommand>
+    #|      kafkacli <subcommand>
     #|
   guard argv.get(1) is Some(sub_command) else {
     println(usage)
@@ -17,7 +17,7 @@ fn main {
       let usage =
         #| Kafka consumer CLI tool
         #| usage: 
-        #|      kafka-cli consume --broker <broker> --topics <topics> --group <group> --offset <offset>
+        #|      kafkacli consume --broker <broker> --topics <topics> --group <group> --offset <offset>
         #|
       let topics = @ref.new("")
       let group = @ref.new("")
