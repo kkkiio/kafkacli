@@ -1,0 +1,10 @@
+{
+  "import": [
+    "moonbitlang/async",
+    "moonbitlang/async/socket",
+    "moonbitlang/x/crypto"
+  ],
+  "test-import": [
+    "moonbitlang/x/crypto"
+  ]
+}

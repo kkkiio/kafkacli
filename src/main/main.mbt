@@ -17,18 +17,23 @@ fn main {
       let usage =
         #| Kafka consumer CLI tool
         #| usage: 
-        #|      kafkacli consume --broker <broker> --topics <topics> --group <group> --offset <offset>
+        #|      kafkacli consume --bootstrap-server <broker> --topics <topics> --group <group> --offset <offset>
         #|
       let topics = @ref.new("")
       let group = @ref.new("")
       let offset = @ref.new("")
-      let broker = @ref.new("")
+      let bootstrap_servers = @ref.new("")
       @ArgParser.parse(
         [
           ("--topics", "-t", Set_string(topics), "topics"),
           ("--group", "-g", Set_string(group), "group"),
           ("--offset", "-o", Set_string(offset), "offset"),
-          ("--broker", "-b", Set_string(broker), "broker"),
+          (
+            "--bootstrap-server",
+            "-b",
+            Set_string(bootstrap_servers),
+            "bootstrap servers",
+          ),
         ],
         fn(_) {  },
         usage,
@@ -36,12 +41,12 @@ fn main {
       )
       // Assuming we use the first broker from the list for now.
       // Or handle multiple brokers appropriately, e.g., join them into a comma-separated string if your library supports it.
-      let broker = match broker.val {
+      let broker = match bootstrap_servers.val {
         "" => {
           println("Broker is required")
           return
         }
-        _ => broker.val
+        _ => bootstrap_servers.val
       }
       let topics = match topics.val {
         "" => {
@@ -68,6 +73,41 @@ fn main {
         group,
         offset,
       ) catch {
+        e => println("Error: \{e}")
+      }
+    }
+    "api-versions" => {
+      let usage =
+        #| Kafka api-versions CLI tool
+        #| usage: 
+        #|      kafkacli api-versions --bootstrap-server <broker>
+        #|
+      let bootstrap_servers = @ref.new("")
+      @ArgParser.parse(
+        [
+          (
+            "--bootstrap-server",
+            "-b",
+            Set_string(bootstrap_servers),
+            "bootstrap servers",
+          ),
+        ],
+        fn(_) {  },
+        usage,
+        argv,
+      )
+      // Assuming we use the first broker from the list for now.
+      // Or handle multiple brokers appropriately, e.g., join them into a comma-separated string if your library supports it.
+      let broker = match bootstrap_servers.val {
+        "" => {
+          println("Broker is required")
+          return
+        }
+        _ => bootstrap_servers.val
+      }
+      @async.with_event_loop(fn(tg) {
+        println(@api_versions.api_versions(tg, broker))
+      }) catch {
         e => println("Error: \{e}")
       }
     }

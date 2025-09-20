@@ -2,8 +2,10 @@
   "is-main": true,
   "import": [
     "kkkiio/kafka-cli/lib",
+    "kkkiio/kafka-cli/lib/api_versions",
     "Yoorkin/ArgParser",
-    "moonbitlang/x/sys"
+    "moonbitlang/x/sys",
+    "moonbitlang/async"
   ],
   "link": {
     "native": {
