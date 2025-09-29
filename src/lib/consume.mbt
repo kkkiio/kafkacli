@@ -93,32 +93,32 @@ pub fn consume(
           raise ConsumeError::MessageError(errstr="Topic name is too large")
         }
         @rdkafka.rd_kafka_message_read_topic_name(msg, bytes_buf, topic_len)
-        // let topic = @encoding.decoder(UTF8).decode_lossy(
-        //   bytes_buf[:topic_len].to_bytes(),
-        // )
+        let topic = @encoding/utf8.decode_lossy(
+          bytes_buf[:topic_len].to_bytes(),
+        )
         let len = @rdkafka.rd_kafka_message_len(msg)
         if len > bytes_buf.length() {
           raise ConsumeError::MessageError(errstr="Message is too large")
         }
-        // let partition = @rdkafka.rd_kafka_message_topic_partition(msg)
-        // let offset = @rdkafka.rd_kafka_message_offset(msg)
+        let partition = @rdkafka.rd_kafka_message_topic_partition(msg)
+        let offset = @rdkafka.rd_kafka_message_offset(msg)
         @rdkafka.rd_kafka_message_read_payload(msg, bytes_buf, len)
         let bytes = bytes_buf[:len].to_bytes()
-        // let str = decoder.decode_lossy()
-        // let json_data = @json.parse(str) catch {
-        //   e => fail("Failed to parse JSON: \{e}, str=\{str}")
-        // }
-        // let full : Json = {
-        //   "topic": topic.to_string(),
-        //   "partition": partition,
-        //   "offset": offset,
-        //   "data": json_data,
-        // }
-        // let b = @utf8.encode(full.stringify(indent=2))
-        print_nl_flush(bytes)
+        let str = @encoding/utf8.decode_lossy(bytes)
+        let json_data = @json.parse(str) catch {
+          e => fail("Failed to parse JSON: \{e}, str=\{str}")
+        }
+        let full : Json = {
+          "topic": topic.to_string(),
+          "partition": partition,
+          "offset": offset,
+          "data": json_data,
+        }
+        let b = @encoding/utf8.encode(full.stringify(indent=2))
+        println(b)
       }
       @rdkafka.RD_KAFKA_RESP_ERR__PARTITION_EOF =>
-        print_nl_flush(b"Reached end of partition")
+        println(b"Reached end of partition")
       err => {
         @rdkafka.rd_kafka_err2str(err, errstr, errstr.length())
         raise ConsumeError::MessageError(errstr=cstr_to_str(errstr))
@@ -141,12 +141,12 @@ fn cstr_to_str(errstr : Bytes) -> String {
 }
 
 ///|
-fn print_nl_flush(bytes : Bytes) -> Unit {
-  @native.Rc::scope_bytes(bytes, fn(ptr, len) {
-    @posix.fwrite(ptr, 1, len.to_uint64(), @posix.stdout_fileptr) |> ignore
-    @native.Rc::scope_bytes("\n", fn(ptr, len) {
-      @posix.fwrite(ptr, 1, len.to_uint64(), @posix.stdout_fileptr) |> ignore
-    })
-    @posix.fflush(@posix.stdout_fileptr) |> ignore
-  })
-}
+// fn print_nl_flush(bytes : Bytes) -> Unit {
+//   @native.Rc::scope_bytes(bytes, fn(ptr, len) {
+//     @posix.fwrite(ptr, 1, len.to_uint64(), @posix.stdout_fileptr) |> ignore
+//     @native.Rc::scope_bytes("\n", fn(ptr, len) {
+//       @posix.fwrite(ptr, 1, len.to_uint64(), @posix.stdout_fileptr) |> ignore
+//     })
+//     @posix.fflush(@posix.stdout_fileptr) |> ignore
+//   })
+// }
