@@ -13,8 +13,7 @@ trait EncoderWithHeader: Encoder {
 // Encode takes an Encoder and turns it into bytes while potentially recording metrics.
 
 ///|
-pub fn encode(e : &Encoder?) -> Bytes raise {
-  guard e is Some(e) else { return Bytes::default() }
+pub fn encode(e : &Encoder) -> Bytes raise {
   let prepEnc = PrepEncoder::new()
   e.encode(prepEnc)
   if prepEnc.length < 0 || prepEnc.length > MaxRequestSize.reinterpret_as_int() {
@@ -43,7 +42,10 @@ pub trait VersionedDecoder {
 // interpreted using Kafka's encoding rules.
 
 ///|
-fn decode(buf : Array[Byte], in_ : &Decoder) -> Unit raise PacketDecodingError {
+pub fn decode(
+  buf : Array[Byte],
+  in_ : &Decoder,
+) -> Unit raise PacketDecodingError {
   let helper = RealDecoder::new(buf)
   in_.decode(helper)
   if helper.off != buf.length() {

@@ -471,7 +471,7 @@ async fn[T : ProtocolBody] test_request(
     fail("Request \{name} has invalid required version")
   }
   let packet = test_request_encode(name, rb, expected)
-  testRequestDecode(name, rb, packet)
+  test_request_decode(rb, packet)
 }
 
 ///|
@@ -483,62 +483,46 @@ async fn test_request_without_byte_comparison(
     fail("Request \{name} has invalid required version")
   }
   let packet = test_request_encode(name, rb, Bytes::default())
-  testRequestDecode(name, rb, packet)
+  test_request_decode(rb, packet)
 }
 
 ///|
-async fn[T : ProtocolBody] test_request_encode(
-  name : String,
+fn[T : ProtocolBody] test_request_encode(
+  _ : String,
   rb : T,
   expected : Bytes,
-) -> Bytes {
-  let req = Request::{ correlation_id: 123, client_id: "foo", body: Some(rb) }
-  let packet = encode(Some(req))
-  let mut headerSize = 0
-  match rb.header_version() {
-    1 => headerSize = 14 + "foo".length()
-    2 => headerSize = 14 + "foo".length() + 1
-    _ =>
-      fail(
-        "Encoding \{name} failed\nheaderVersion \{rb.header_version()} not implemented",
-      )
-  }
-
-  // if expected.length() > 0 && !packet[headerSize..].is_equal_to(expected) {
-  // 	fail("Encoding \{name} failed\ngot \{packet[headerSize..]} \nwant \{expected}")
-  // }
+) -> Bytes raise {
+  let (packet, body_offset) = encode_request(rb)
   if expected.length() > 0 {
-    assert_eq(packet[headerSize:], expected)
+    assert_eq(packet[body_offset:], expected)
   }
   return packet
 }
 
 ///|
-async fn testRequestDecode(
-  name : String,
-  rb : &ProtocolBody,
-  packet : Bytes,
-) -> Unit {
-  let (decoded, n) = decode_request(MemoryReader::new(packet))
+fn[T : ProtocolBody] encode_request(rb : T) -> (Bytes, Int) raise {
+  let req = Request::{ correlation_id: 123, client_id: "foo", body: Some(rb) }
+  let packet = encode(req)
+  let header_size = match rb.header_version() {
+    1 => 14 + "foo".length()
+    2 => 14 + "foo".length() + 1
+    v => fail("headerVersion \{v} not implemented")
+  }
+  (packet, header_size)
+}
+
+///|
+fn[T : ProtocolBody] test_request_decode(rb : T, packet : Bytes) -> Unit raise {
+  guard packet is [u32be(n), .. body_bytes]
+  assert_eq(n, body_bytes.length().reinterpret_as_uint())
+  let decoded = Request::default()
+  decode(body_bytes.to_bytes().to_array(), decoded)
+  // let (decoded, n) = decode_request(MemoryReader::new(packet))
   guard decoded.body is Some(decoded_body) else { fail("Decoded body is None") }
-  if decoded.correlation_id != 123 || decoded.client_id != "foo" {
-    fail("Decoded header \{name} is not valid: \{decoded}")
-  }
-  if rb.to_string() != decoded_body.to_string() {
-    fail(
-      "Decoded request \{name} does not match the encoded one\nencoded: \{rb}\ndecoded: \{decoded.body}",
-    )
-  }
-  if n != packet.length() {
-    fail(
-      "Decoded request \{name} bytes: \{n} does not match the encoded one: \{packet.length()}",
-    )
-  }
-  if rb.version() != decoded_body.version() {
-    fail(
-      "Decoded request \{name} version: \{decoded_body.version()} does not match the encoded one: \{rb.version()}",
-    )
-  }
+  assert_eq(decoded.correlation_id, 123)
+  assert_eq(decoded.client_id, "foo")
+  assert_eq(rb.to_string(), decoded_body.to_string())
+  assert_eq(rb.version(), decoded_body.version())
 }
 
 ///|
@@ -548,7 +532,7 @@ fn[A : VersionedDecoder + Show] testResponse(
   expected : Bytes,
   decoded : A,
 ) -> Unit raise {
-  let encoded = encode(Some(res))
+  let encoded = encode(res)
   assert_eq(encoded, expected)
   versioned_decode(encoded.to_array(), decoded, res.version())
   assert_eq(decoded.to_string(), res.to_string())
@@ -572,6 +556,7 @@ pub impl @io.Reader for MemoryReader with read(
   offset? = 0,
   max_len? = buf.length() - offset,
 ) {
+  let max_len = @cmp.minimum(max_len, self.bytes.length() - self.offset)
   for i in 0..<max_len {
     buf[offset + i] = self.bytes[self.offset]
   }

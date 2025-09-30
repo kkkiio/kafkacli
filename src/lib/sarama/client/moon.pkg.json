@@ -1,0 +1,5 @@
+{
+  "import": [
+    "kkkiio/kafkacli/lib/sarama/core"
+  ]
+}

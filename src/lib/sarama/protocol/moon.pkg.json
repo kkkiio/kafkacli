@@ -1,6 +1,6 @@
 {
   "import": [
-    "kkkiio/kafka-cli/lib/encoding/binary",
+    "kkkiio/kafkacli/lib/encoding/binary",
     "moonbitlang/async/io"
   ],
   "test-import": [

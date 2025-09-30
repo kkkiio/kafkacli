@@ -55,18 +55,14 @@ pub impl Decoder for Request with decode(self, pd) {
 ///|
 pub async fn decode_request(r : &@io.Reader) -> (Request, Int) {
   let lengthBytes = r.read_exactly(4)
-  let mut bytesRead = lengthBytes.length()
-  let length = (lengthBytes[0].to_uint() << 24) |
-    (lengthBytes[1].to_uint() << 16) |
-    (lengthBytes[2].to_uint() << 8) |
-    lengthBytes[3].to_uint()
+  guard lengthBytes is [u32be(length)]
   if length <= 4 || length > MaxRequestSize {
     raise PacketDecodingError(
       "message of length \{length} too large or too small",
     )
   }
   let encodedReq = r.read_exactly(length.reinterpret_as_int())
-  bytesRead += encodedReq.length()
+  let bytesRead = 4 + encodedReq.length()
   let req = Request::default()
   decode(encodedReq.to_array(), req)
   return (req, bytesRead)
@@ -93,7 +89,7 @@ pub fn allocate_body(key : Int16, version : Int16) -> &ProtocolBody? {
     // apiKeyDescribeGroups => DescribeGroupsRequest::new(version)
     // apiKeyListGroups => ListGroupsRequest::new(version)
     // apiKeySaslHandshake => SaslHandshakeRequest::new(version)
-    apiKeyApiVersions => ApiVersionsRequest::new(version)
+    ApiKeyApiVersions => ApiVersionsRequest::new(version)
     // apiKeyCreateTopics => CreateTopicsRequest::new(version)
     // apiKeyDeleteTopics => DeleteTopicsRequest::new(version)
     // apiKeyDeleteRecords => DeleteRecordsRequest::new(version)

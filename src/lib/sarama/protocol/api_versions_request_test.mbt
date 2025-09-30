@@ -1,19 +1,22 @@
 ///|
-async test "TestApiVersionsRequest" {
-  let apiVersionRequest : Bytes = b""
-  let request = ApiVersionsRequest::new(0)
-  test_request("basic", request, apiVersionRequest)
+test "TestApiVersionsRequest" {
+  let req = ApiVersionsRequest::new(0)
+  let (packet, body_offset) = encode_request(req)
+  @json.inspect(packet[body_offset:].to_bytes())
+  test_request_decode(req, packet)
 }
 
 ///|
-async test "TestApiVersionsRequestV3" {
-  let apiVersionRequestV3 : Bytes = Bytes::from_array([
-    0x07, 's', 'a', 'r', 'a', 'm', 'a', 0x07, '0', '.', '1', '0', '.', '0', 0x00,
-  ])
-  let request = ApiVersionsRequest::{
+test "TestApiVersionsRequestV3" {
+  let req = ApiVersionsRequest::{
     version: 3,
     client_software_name: "sarama",
     client_software_version: "0.10.0",
   }
-  test_request("v3", request, apiVersionRequestV3)
+  let (packet, body_offset) = encode_request(req)
+  @json.inspect(
+    packet[body_offset:].to_bytes(),
+    content="\\x07sarama\\x070.10.0\\x00",
+  )
+  test_request_decode(req, packet)
 }

@@ -1,1 +1,10 @@
-{}
+{
+  "test-import": [
+    "kkkiio/kafkacli/lib/sarama/client",
+    "kkkiio/kafkacli/lib/sarama/consumer",
+    "kkkiio/kafkacli/lib/sarama/producer",
+    "kkkiio/kafkacli/lib/sarama/admin",
+    "kkkiio/kafkacli/lib/sarama/protocol",
+    "kkkiio/kafkacli/lib/sarama/core"
+  ]
+}
