@@ -60,15 +60,12 @@ trait PushEncoder {
   // SaveOffset is guaranteed to have been called first. The implementation should write ReserveLength() bytes
   // of data to the saved offset, based on the data between the saved offset and curOffset.
   run(Self, Int, Array[Byte]) -> Unit raise
-}
-
-// dynamicPushEncoder extends the interface of pushEncoder for uses cases where the length of the
-// fields itself is unknown until its value was computed (for instance varint encoded length
-// fields).
-
-///|
-trait DynamicPushEncoder: PushEncoder {
   // Called during pop() to adjust the length of the field.
   // It should return the difference in bytes between the last computed length and current length.
-  adjust_length(Self, Int) -> Int
+  adjust_length(Self, Int) -> Int = _
+}
+
+///|
+impl PushEncoder with adjust_length(_, _) {
+  0
 }

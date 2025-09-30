@@ -1,0 +1,9 @@
+{
+  "import": [
+    "kkkiio/kafka-cli/lib/encoding/binary",
+    "moonbitlang/async/io"
+  ],
+  "test-import": [
+    "moonbitlang/async"
+  ]
+}

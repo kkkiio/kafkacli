@@ -6,7 +6,10 @@ struct RealEncoder {
   // registry metrics.Registry
 }
 
-// primitives
+///|
+pub fn RealEncoder::new(raw : Array[Byte]) -> RealEncoder {
+  { raw, off: 0, stack: Array::new() }
+}
 
 ///|
 pub impl PacketEncoder for RealEncoder with put_int8(self, in_) {
