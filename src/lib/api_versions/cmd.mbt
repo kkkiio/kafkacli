@@ -9,7 +9,7 @@ pub async fn api_versions(
   }
   let host = parts[0]
   let port = @strconv.parse_int(parts[1])
-  let addr = @socket.Addr::resolve(@encoding/utf8.encode(host), port~) catch {
+  let addr = @socket.Addr::resolve(host.to_string(), port~) catch {
     err => fail("Failed to resolve address: \{err}, host=\{host}, port=\{port}")
   }
   println("Resolved \{host}:\{port} to \{addr}")

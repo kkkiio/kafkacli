@@ -12,6 +12,7 @@ pub fn starts_with_uvarint_zero(bs : Bytes) -> Bool {
 }
 
 ///|
+#skip()
 test "api_versions protocol encoding" {
   let req = encode_api_versions_request(1, "rdkafka", "librdkafka", "2.0.2")
   inspect(

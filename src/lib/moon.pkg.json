@@ -1,6 +1,5 @@
 {
   "import": [
-    "kkkiio/kafka-cli/lib/rdkafka",
     "moonbitlang/x/encoding"
   ]
 }
