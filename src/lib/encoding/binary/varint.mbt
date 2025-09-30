@@ -53,7 +53,7 @@ pub fn append_uvarint(buf : Array[Byte], value : UInt64) -> Int {
 /// 错误语义与 Go 对齐：
 /// - n == 0: 数据不足
 /// - n < 0: 溢出，-n 为已读字节数
-pub fn uvarint(data : Bytes) -> (UInt64, Int) {
+pub fn uvarint(data : ArrayView[Byte]) -> (UInt64, Int) {
   let mut x : UInt64 = 0UL
   let mut s : Int = 0
   let len = data.length()
@@ -96,7 +96,7 @@ pub fn append_varint(buf : Array[Byte], value : Int64) -> Int {
 ///|
 /// 从字节序列中解码有符号 varint，返回 (值, 已读字节数)
 /// 错误语义与 Go 对齐：n == 0 数据不足；n < 0 溢出
-pub fn varint(data : Bytes) -> (Int64, Int) {
+pub fn varint(data : ArrayView[Byte]) -> (Int64, Int) {
   let (ux, n) = uvarint(data)
   let mut x = (ux >> 1).reinterpret_as_int64()
   if (ux & 1UL) != 0UL {
@@ -108,7 +108,7 @@ pub fn varint(data : Bytes) -> (Int64, Int) {
 ///|
 /// 从字节序列读取无符号 varint，返回 (值, 错误?)
 /// 错误：ErrEOF / ErrUnexpectedEOF / ErrOverflow
-pub fn read_uvarint(data : Bytes) -> UInt64 raise DecodeError {
+pub fn read_uvarint(data : ArrayView[Byte]) -> UInt64 raise DecodeError {
   let mut x : UInt64 = 0UL
   let mut s : Int = 0
   let len = data.length()
@@ -142,7 +142,7 @@ pub fn read_uvarint(data : Bytes) -> UInt64 raise DecodeError {
 
 ///|
 /// 从字节序列读取有符号 varint，返回 (值, 错误?)
-pub fn read_varint(data : Bytes) -> Int64 raise DecodeError {
+pub fn read_varint(data : ArrayView[Byte]) -> Int64 raise DecodeError {
   let ux = read_uvarint(data)
   let mut x = (ux >> 1).reinterpret_as_int64()
   if (ux & 1UL) != 0UL {

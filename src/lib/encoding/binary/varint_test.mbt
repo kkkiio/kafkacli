@@ -19,25 +19,16 @@ fn test_constant(w : UInt, max : Int) -> Unit raise {
 fn test_varint_one(x : Int64) -> Unit raise {
   let buf = Array::make(MaxVarintLen64, b'\x00')
   let n = put_varint(buf, x)
-  let bytes_arr : Array[Byte] = Array::new()
-  for i in 0..<n {
-    bytes_arr.push(buf[i])
-  }
-  let bytes = @bytes.from_array(bytes_arr)
-  let (y, m) = varint(bytes)
+  buf.resize(n, b'\x00')
+  let (y, m) = varint(buf)
   assert_eq(y, x)
   assert_eq(m, n)
-  let prefix : Array[Byte] = [b'p', b'r', b'e', b'f', b'i', b'x']
-  append_varint(prefix, x) |> ignore
-  let expected = @bytes.from_array([b'p', b'r', b'e', b'f', b'i', b'x']) + bytes
-  let prefix_bytes = @bytes.from_array(prefix)
-  assert_eq(prefix_bytes, expected)
-  let yy = read_varint(bytes) catch {
-    _ => {
-      assert_true(false)
-      0L
-    }
-  }
+  let prefix = b"prefix"
+  let buf2 = prefix.to_array()
+  append_varint(buf2, x) |> ignore
+  let expected = [prefix.to_array(), buf].flatten()
+  assert_eq(buf2, expected)
+  let yy = read_varint(buf)
   assert_eq(yy, x)
 }
 
@@ -46,25 +37,16 @@ fn test_varint_one(x : Int64) -> Unit raise {
 fn test_uvarint_one(x : UInt64) -> Unit raise {
   let buf = Array::make(MaxVarintLen64, b'\x00')
   let n = put_uvarint(buf, x)
-  let bytes_arr : Array[Byte] = Array::new()
-  for i in 0..<n {
-    bytes_arr.push(buf[i])
-  }
-  let bytes = @bytes.from_array(bytes_arr)
-  let (y, m) = uvarint(bytes)
+  buf.resize(n, b'\x00')
+  let (y, m) = uvarint(buf)
   assert_eq(y, x)
   assert_eq(m, n)
-  let prefix : Array[Byte] = [b'p', b'r', b'e', b'f', b'i', b'x']
-  append_uvarint(prefix, x) |> ignore
-  let expected = @bytes.from_array([b'p', b'r', b'e', b'f', b'i', b'x']) + bytes
-  let prefix_bytes = @bytes.from_array(prefix)
-  assert_eq(prefix_bytes, expected)
-  let yy = read_uvarint(bytes) catch {
-    _ => {
-      assert_true(false)
-      0UL
-    }
-  }
+  let prefix = b"prefix"
+  let buf2 = prefix.to_array()
+  append_uvarint(buf2, x) |> ignore
+  let expected = [prefix.to_array(), buf].flatten()
+  assert_eq(buf2, expected)
+  let yy = read_uvarint(buf)
   assert_eq(yy, x)
 }
 
@@ -139,7 +121,7 @@ test "TestBufferTooSmall" {
   let base = [b'\x80', b'\x80', b'\x80', b'\x80']
   for i = 0; i <= base.length(); i = i + 1 {
     let part = Array::make(i, b'\x80')
-    let bytes = @bytes.from_array(part)
+    let bytes = part[:]
     let (val, n) = uvarint(bytes)
     assert_eq(val, 0UL)
     assert_eq(n, 0)
@@ -159,7 +141,7 @@ test "TestBufferTooSmall" {
 /// 溢出用例（超过 MaxVarintLen64 字节）
 test "TestOverflowBasic" {
   let arr = Array::make(11, b'\xff')
-  let bytes = @bytes.from_array(arr)
+  let bytes = arr[:]
   let (_, n) = uvarint(bytes)
   assert_eq(n, -11)
   try {
