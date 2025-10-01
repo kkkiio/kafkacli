@@ -453,14 +453,6 @@
 // 	}
 // }
 
-// func testVersionDecodable(t *testing.T, name string, out versionedDecoder, in []byte, version int16) {
-// 	t.Helper()
-// 	err := versionedDecode(in, out, version, nil)
-// 	if err != nil {
-// 		t.Error("Decoding", name, "version", version, "failed:", err)
-// 	}
-// }
-
 ///|
 async fn[T : ProtocolBody] test_request(
   name : String,
@@ -500,10 +492,10 @@ fn[T : ProtocolBody] test_request_encode(
 }
 
 ///|
-fn[T : ProtocolBody] encode_request(rb : T) -> (Bytes, Int) raise {
-  let req = Request::{ correlation_id: 123, client_id: "foo", body: Some(rb) }
+fn[T : ProtocolBody] encode_request(body : T) -> (Bytes, Int) raise {
+  let req = Request::{ correlation_id: 123, client_id: "foo", body }
   let packet = encode(req)
-  let header_size = match rb.header_version() {
+  let header_size = match body.header_version() {
     1 => 14 + "foo".length()
     2 => 14 + "foo".length() + 1
     v => fail("headerVersion \{v} not implemented")
@@ -515,10 +507,8 @@ fn[T : ProtocolBody] encode_request(rb : T) -> (Bytes, Int) raise {
 fn[T : ProtocolBody] test_request_decode(rb : T, packet : Bytes) -> Unit raise {
   guard packet is [u32be(n), .. body_bytes]
   assert_eq(n, body_bytes.length().reinterpret_as_uint())
-  let decoded = Request::default()
-  decode(body_bytes.to_bytes().to_array(), decoded)
-  // let (decoded, n) = decode_request(MemoryReader::new(packet))
-  guard decoded.body is Some(decoded_body) else { fail("Decoded body is None") }
+  let decoded = decode(body_bytes, Request::decode)
+  guard decoded.body is decoded_body else { fail("Decoded body is None") }
   assert_eq(decoded.correlation_id, 123)
   assert_eq(decoded.client_id, "foo")
   assert_eq(rb.to_string(), decoded_body.to_string())
@@ -526,15 +516,14 @@ fn[T : ProtocolBody] test_request_decode(rb : T, packet : Bytes) -> Unit raise {
 }
 
 ///|
-fn[A : VersionedDecoder + Show] testResponse(
-  name : String,
+fn[A : VersionedDecoder + Show] test_response(
   res : &ProtocolBody,
   expected : Bytes,
   decoded : A,
 ) -> Unit raise {
   let encoded = encode(res)
   assert_eq(encoded, expected)
-  versioned_decode(encoded.to_array(), decoded, res.version())
+  versioned_decode(encoded, decoded, res.version())
   assert_eq(decoded.to_string(), res.to_string())
 }
 

@@ -219,8 +219,9 @@ impl Show for PacketEncodingError with output(self, logger) {
 suberror PacketDecodingError String
 
 ///|
-impl Show for PacketDecodingError with output(self, logger) {
-  logger.write_string("kafka: error decoding packet: \{self}")
+pub impl Show for PacketDecodingError with output(self, logger) {
+  guard self is PacketDecodingError(v)
+  logger.write_string("kafka: error decoding packet: \{v}")
 }
 
 // ConfigurationError is the type of error returned from a constructor (e.g. NewClient, or NewConsumer)
@@ -238,292 +239,292 @@ impl Show for ConfigurationError with output(self, logger) {
 // See https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ErrorCodes
 
 ///|
-suberror KError Int16
+pub suberror KError Int16
 
 // Numeric error codes returned by the Kafka server.
 
 ///|
-const ErrUnknown = -1 // Errors.UNKNOWN_SERVER_ERROR
+pub const ErrUnknown : Int16 = -1 // Errors.UNKNOWN_SERVER_ERROR
 
 ///|
-const ErrNoError = 0 // Errors.NONE
+pub const ErrNoError : Int16 = 0 // Errors.NONE
 
 ///|
-const ErrOffsetOutOfRange = 1 // Errors.OFFSET_OUT_OF_RANGE
+pub const ErrOffsetOutOfRange : Int16 = 1 // Errors.OFFSET_OUT_OF_RANGE
 
 ///|
-const ErrInvalidMessage = 2 // Errors.CORRUPT_MESSAGE
+pub const ErrInvalidMessage : Int16 = 2 // Errors.CORRUPT_MESSAGE
 
 ///|
-const ErrUnknownTopicOrPartition = 3 // Errors.UNKNOWN_TOPIC_OR_PARTITION
+pub const ErrUnknownTopicOrPartition : Int16 = 3 // Errors.UNKNOWN_TOPIC_OR_PARTITION
 
 ///|
-const ErrInvalidMessageSize = 4 // Errors.INVALID_FETCH_SIZE
+pub const ErrInvalidMessageSize : Int16 = 4 // Errors.INVALID_FETCH_SIZE
 
 ///|
-const ErrLeaderNotAvailable = 5 // Errors.LEADER_NOT_AVAILABLE
+pub const ErrLeaderNotAvailable : Int16 = 5 // Errors.LEADER_NOT_AVAILABLE
 
 ///|
-const ErrNotLeaderForPartition = 6 // Errors.NOT_LEADER_OR_FOLLOWER
+pub const ErrNotLeaderForPartition : Int16 = 6 // Errors.NOT_LEADER_OR_FOLLOWER
 
 ///|
-const ErrRequestTimedOut = 7 // Errors.REQUEST_TIMED_OUT
+pub const ErrRequestTimedOut : Int16 = 7 // Errors.REQUEST_TIMED_OUT
 
 ///|
-const ErrBrokerNotAvailable = 8 // Errors.BROKER_NOT_AVAILABLE
+pub const ErrBrokerNotAvailable : Int16 = 8 // Errors.BROKER_NOT_AVAILABLE
 
 ///|
-const ErrReplicaNotAvailable = 9 // Errors.REPLICA_NOT_AVAILABLE
+pub const ErrReplicaNotAvailable : Int16 = 9 // Errors.REPLICA_NOT_AVAILABLE
 
 ///|
-const ErrMessageSizeTooLarge = 10 // Errors.MESSAGE_TOO_LARGE
+pub const ErrMessageSizeTooLarge : Int16 = 10 // Errors.MESSAGE_TOO_LARGE
 
 ///|
-const ErrStaleControllerEpochCode = 11 // Errors.STALE_CONTROLLER_EPOCH
+pub const ErrStaleControllerEpochCode : Int16 = 11 // Errors.STALE_CONTROLLER_EPOCH
 
 ///|
-const ErrOffsetMetadataTooLarge = 12 // Errors.OFFSET_METADATA_TOO_LARGE
+pub const ErrOffsetMetadataTooLarge : Int16 = 12 // Errors.OFFSET_METADATA_TOO_LARGE
 
 ///|
-const ErrNetworkException = 13 // Errors.NETWORK_EXCEPTION
+pub const ErrNetworkException : Int16 = 13 // Errors.NETWORK_EXCEPTION
 
 ///|
-const ErrOffsetsLoadInProgress = 14 // Errors.COORDINATOR_LOAD_IN_PROGRESS
+pub const ErrOffsetsLoadInProgress : Int16 = 14 // Errors.COORDINATOR_LOAD_IN_PROGRESS
 
 ///|
-const ErrConsumerCoordinatorNotAvailable = 15 // Errors.COORDINATOR_NOT_AVAILABLE
+pub const ErrConsumerCoordinatorNotAvailable : Int16 = 15 // Errors.COORDINATOR_NOT_AVAILABLE
 
 ///|
-const ErrNotCoordinatorForConsumer = 16 // Errors.NOT_COORDINATOR
+pub const ErrNotCoordinatorForConsumer : Int16 = 16 // Errors.NOT_COORDINATOR
 
 ///|
-const ErrInvalidTopic = 17 // Errors.INVALID_TOPIC_EXCEPTION
+pub const ErrInvalidTopic : Int16 = 17 // Errors.INVALID_TOPIC_EXCEPTION
 
 ///|
-const ErrMessageSetSizeTooLarge = 18 // Errors.RECORD_LIST_TOO_LARGE
+pub const ErrMessageSetSizeTooLarge : Int16 = 18 // Errors.RECORD_LIST_TOO_LARGE
 
 ///|
-const ErrNotEnoughReplicas = 19 // Errors.NOT_ENOUGH_REPLICAS
+pub const ErrNotEnoughReplicas : Int16 = 19 // Errors.NOT_ENOUGH_REPLICAS
 
 ///|
-const ErrNotEnoughReplicasAfterAppend = 20 // Errors.NOT_ENOUGH_REPLICAS_AFTER_APPEND
+pub const ErrNotEnoughReplicasAfterAppend : Int16 = 20 // Errors.NOT_ENOUGH_REPLICAS_AFTER_APPEND
 
 ///|
-const ErrInvalidRequiredAcks = 21 // Errors.INVALID_REQUIRED_ACKS
+pub const ErrInvalidRequiredAcks : Int16 = 21 // Errors.INVALID_REQUIRED_ACKS
 
 ///|
-const ErrIllegalGeneration = 22 // Errors.ILLEGAL_GENERATION
+pub const ErrIllegalGeneration : Int16 = 22 // Errors.ILLEGAL_GENERATION
 
 ///|
-const ErrInconsistentGroupProtocol = 23 // Errors.INCONSISTENT_GROUP_PROTOCOL
+pub const ErrInconsistentGroupProtocol : Int16 = 23 // Errors.INCONSISTENT_GROUP_PROTOCOL
 
 ///|
-const ErrInvalidGroupId = 24 // Errors.INVALID_GROUP_ID
+pub const ErrInvalidGroupId : Int16 = 24 // Errors.INVALID_GROUP_ID
 
 ///|
-const ErrUnknownMemberId = 25 // Errors.UNKNOWN_MEMBER_ID
+pub const ErrUnknownMemberId : Int16 = 25 // Errors.UNKNOWN_MEMBER_ID
 
 ///|
-const ErrInvalidSessionTimeout = 26 // Errors.INVALID_SESSION_TIMEOUT
+pub const ErrInvalidSessionTimeout : Int16 = 26 // Errors.INVALID_SESSION_TIMEOUT
 
 ///|
-const ErrRebalanceInProgress = 27 // Errors.REBALANCE_IN_PROGRESS
+pub const ErrRebalanceInProgress : Int16 = 27 // Errors.REBALANCE_IN_PROGRESS
 
 ///|
-const ErrInvalidCommitOffsetSize = 28 // Errors.INVALID_COMMIT_OFFSET_SIZE
+pub const ErrInvalidCommitOffsetSize : Int16 = 28 // Errors.INVALID_COMMIT_OFFSET_SIZE
 
 ///|
-const ErrTopicAuthorizationFailed = 29 // Errors.TOPIC_AUTHORIZATION_FAILED
+pub const ErrTopicAuthorizationFailed : Int16 = 29 // Errors.TOPIC_AUTHORIZATION_FAILED
 
 ///|
-const ErrGroupAuthorizationFailed = 30 // Errors.GROUP_AUTHORIZATION_FAILED
+pub const ErrGroupAuthorizationFailed : Int16 = 30 // Errors.GROUP_AUTHORIZATION_FAILED
 
 ///|
-const ErrClusterAuthorizationFailed = 31 // Errors.CLUSTER_AUTHORIZATION_FAILED
+pub const ErrClusterAuthorizationFailed : Int16 = 31 // Errors.CLUSTER_AUTHORIZATION_FAILED
 
 ///|
-const ErrInvalidTimestamp = 32 // Errors.INVALID_TIMESTAMP
+pub const ErrInvalidTimestamp : Int16 = 32 // Errors.INVALID_TIMESTAMP
 
 ///|
-const ErrUnsupportedSASLMechanism = 33 // Errors.UNSUPPORTED_SASL_MECHANISM
+pub const ErrUnsupportedSASLMechanism : Int16 = 33 // Errors.UNSUPPORTED_SASL_MECHANISM
 
 ///|
-const ErrIllegalSASLState = 34 // Errors.ILLEGAL_SASL_STATE
+pub const ErrIllegalSASLState : Int16 = 34 // Errors.ILLEGAL_SASL_STATE
 
 ///|
-const ErrUnsupportedVersion = 35 // Errors.UNSUPPORTED_VERSION
+pub const ErrUnsupportedVersion : Int16 = 35 // Errors.UNSUPPORTED_VERSION
 
 ///|
-const ErrTopicAlreadyExists = 36 // Errors.TOPIC_ALREADY_EXISTS
+pub const ErrTopicAlreadyExists : Int16 = 36 // Errors.TOPIC_ALREADY_EXISTS
 
 ///|
-const ErrInvalidPartitions = 37 // Errors.INVALID_PARTITIONS
+pub const ErrInvalidPartitions : Int16 = 37 // Errors.INVALID_PARTITIONS
 
 ///|
-const ErrInvalidReplicationFactor = 38 // Errors.INVALID_REPLICATION_FACTOR
+pub const ErrInvalidReplicationFactor : Int16 = 38 // Errors.INVALID_REPLICATION_FACTOR
 
 ///|
-const ErrInvalidReplicaAssignment = 39 // Errors.INVALID_REPLICA_ASSIGNMENT
+pub const ErrInvalidReplicaAssignment : Int16 = 39 // Errors.INVALID_REPLICA_ASSIGNMENT
 
 ///|
-const ErrInvalidConfig = 40 // Errors.INVALID_CONFIG
+pub const ErrInvalidConfig : Int16 = 40 // Errors.INVALID_CONFIG
 
 ///|
-const ErrNotController = 41 // Errors.NOT_CONTROLLER
+pub const ErrNotController : Int16 = 41 // Errors.NOT_CONTROLLER
 
 ///|
-const ErrInvalidRequest = 42 // Errors.INVALID_REQUEST
+pub const ErrInvalidRequest : Int16 = 42 // Errors.INVALID_REQUEST
 
 ///|
-const ErrUnsupportedForMessageFormat = 43 // Errors.UNSUPPORTED_FOR_MESSAGE_FORMAT
+pub const ErrUnsupportedForMessageFormat : Int16 = 43 // Errors.UNSUPPORTED_FOR_MESSAGE_FORMAT
 
 ///|
-const ErrPolicyViolation = 44 // Errors.POLICY_VIOLATION
+pub const ErrPolicyViolation : Int16 = 44 // Errors.POLICY_VIOLATION
 
 ///|
-const ErrOutOfOrderSequenceNumber = 45 // Errors.OUT_OF_ORDER_SEQUENCE_NUMBER
+pub const ErrOutOfOrderSequenceNumber : Int16 = 45 // Errors.OUT_OF_ORDER_SEQUENCE_NUMBER
 
 ///|
-const ErrDuplicateSequenceNumber = 46 // Errors.DUPLICATE_SEQUENCE_NUMBER
+pub const ErrDuplicateSequenceNumber : Int16 = 46 // Errors.DUPLICATE_SEQUENCE_NUMBER
 
 ///|
-const ErrInvalidProducerEpoch = 47 // Errors.INVALID_PRODUCER_EPOCH
+pub const ErrInvalidProducerEpoch : Int16 = 47 // Errors.INVALID_PRODUCER_EPOCH
 
 ///|
-const ErrInvalidTxnState = 48 // Errors.INVALID_TXN_STATE
+pub const ErrInvalidTxnState : Int16 = 48 // Errors.INVALID_TXN_STATE
 
 ///|
-const ErrInvalidProducerIDMapping = 49 // Errors.INVALID_PRODUCER_ID_MAPPING
+pub const ErrInvalidProducerIDMapping : Int16 = 49 // Errors.INVALID_PRODUCER_ID_MAPPING
 
 ///|
-const ErrInvalidTransactionTimeout = 50 // Errors.INVALID_TRANSACTION_TIMEOUT
+pub const ErrInvalidTransactionTimeout : Int16 = 50 // Errors.INVALID_TRANSACTION_TIMEOUT
 
 ///|
-const ErrConcurrentTransactions = 51 // Errors.CONCURRENT_TRANSACTIONS
+pub const ErrConcurrentTransactions : Int16 = 51 // Errors.CONCURRENT_TRANSACTIONS
 
 ///|
-const ErrTransactionCoordinatorFenced = 52 // Errors.TRANSACTION_COORDINATOR_FENCED
+pub const ErrTransactionCoordinatorFenced : Int16 = 52 // Errors.TRANSACTION_COORDINATOR_FENCED
 
 ///|
-const ErrTransactionalIDAuthorizationFailed = 53 // Errors.TRANSACTIONAL_ID_AUTHORIZATION_FAILED
+pub const ErrTransactionalIDAuthorizationFailed : Int16 = 53 // Errors.TRANSACTIONAL_ID_AUTHORIZATION_FAILED
 
 ///|
-const ErrSecurityDisabled = 54 // Errors.SECURITY_DISABLED
+pub const ErrSecurityDisabled : Int16 = 54 // Errors.SECURITY_DISABLED
 
 ///|
-const ErrOperationNotAttempted = 55 // Errors.OPERATION_NOT_ATTEMPTED
+pub const ErrOperationNotAttempted : Int16 = 55 // Errors.OPERATION_NOT_ATTEMPTED
 
 ///|
-const ErrKafkaStorageError = 56 // Errors.KAFKA_STORAGE_ERROR
+pub const ErrKafkaStorageError : Int16 = 56 // Errors.KAFKA_STORAGE_ERROR
 
 ///|
-const ErrLogDirNotFound = 57 // Errors.LOG_DIR_NOT_FOUND
+pub const ErrLogDirNotFound : Int16 = 57 // Errors.LOG_DIR_NOT_FOUND
 
 ///|
-const ErrSASLAuthenticationFailed = 58 // Errors.SASL_AUTHENTICATION_FAILED
+pub const ErrSASLAuthenticationFailed : Int16 = 58 // Errors.SASL_AUTHENTICATION_FAILED
 
 ///|
-const ErrUnknownProducerID = 59 // Errors.UNKNOWN_PRODUCER_ID
+pub const ErrUnknownProducerID : Int16 = 59 // Errors.UNKNOWN_PRODUCER_ID
 
 ///|
-const ErrReassignmentInProgress = 60 // Errors.REASSIGNMENT_IN_PROGRESS
+pub const ErrReassignmentInProgress : Int16 = 60 // Errors.REASSIGNMENT_IN_PROGRESS
 
 ///|
-const ErrDelegationTokenAuthDisabled = 61 // Errors.DELEGATION_TOKEN_AUTH_DISABLED
+pub const ErrDelegationTokenAuthDisabled : Int16 = 61 // Errors.DELEGATION_TOKEN_AUTH_DISABLED
 
 ///|
-const ErrDelegationTokenNotFound = 62 // Errors.DELEGATION_TOKEN_NOT_FOUND
+pub const ErrDelegationTokenNotFound : Int16 = 62 // Errors.DELEGATION_TOKEN_NOT_FOUND
 
 ///|
-const ErrDelegationTokenOwnerMismatch = 63 // Errors.DELEGATION_TOKEN_OWNER_MISMATCH
+pub const ErrDelegationTokenOwnerMismatch : Int16 = 63 // Errors.DELEGATION_TOKEN_OWNER_MISMATCH
 
 ///|
-const ErrDelegationTokenRequestNotAllowed = 64 // Errors.DELEGATION_TOKEN_REQUEST_NOT_ALLOWED
+pub const ErrDelegationTokenRequestNotAllowed : Int16 = 64 // Errors.DELEGATION_TOKEN_REQUEST_NOT_ALLOWED
 
 ///|
-const ErrDelegationTokenAuthorizationFailed = 65 // Errors.DELEGATION_TOKEN_AUTHORIZATION_FAILED
+pub const ErrDelegationTokenAuthorizationFailed : Int16 = 65 // Errors.DELEGATION_TOKEN_AUTHORIZATION_FAILED
 
 ///|
-const ErrDelegationTokenExpired = 66 // Errors.DELEGATION_TOKEN_EXPIRED
+pub const ErrDelegationTokenExpired : Int16 = 66 // Errors.DELEGATION_TOKEN_EXPIRED
 
 ///|
-const ErrInvalidPrincipalType = 67 // Errors.INVALID_PRINCIPAL_TYPE
+pub const ErrInvalidPrincipalType : Int16 = 67 // Errors.INVALID_PRINCIPAL_TYPE
 
 ///|
-const ErrNonEmptyGroup = 68 // Errors.NON_EMPTY_GROUP
+pub const ErrNonEmptyGroup : Int16 = 68 // Errors.NON_EMPTY_GROUP
 
 ///|
-const ErrGroupIDNotFound = 69 // Errors.GROUP_ID_NOT_FOUND
+pub const ErrGroupIDNotFound : Int16 = 69 // Errors.GROUP_ID_NOT_FOUND
 
 ///|
-const ErrFetchSessionIDNotFound = 70 // Errors.FETCH_SESSION_ID_NOT_FOUND
+pub const ErrFetchSessionIDNotFound : Int16 = 70 // Errors.FETCH_SESSION_ID_NOT_FOUND
 
 ///|
-const ErrInvalidFetchSessionEpoch = 71 // Errors.INVALID_FETCH_SESSION_EPOCH
+pub const ErrInvalidFetchSessionEpoch : Int16 = 71 // Errors.INVALID_FETCH_SESSION_EPOCH
 
 ///|
-const ErrListenerNotFound = 72 // Errors.LISTENER_NOT_FOUND
+pub const ErrListenerNotFound : Int16 = 72 // Errors.LISTENER_NOT_FOUND
 
 ///|
-const ErrTopicDeletionDisabled = 73 // Errors.TOPIC_DELETION_DISABLED
+pub const ErrTopicDeletionDisabled : Int16 = 73 // Errors.TOPIC_DELETION_DISABLED
 
 ///|
-const ErrFencedLeaderEpoch = 74 // Errors.FENCED_LEADER_EPOCH
+pub const ErrFencedLeaderEpoch : Int16 = 74 // Errors.FENCED_LEADER_EPOCH
 
 ///|
-const ErrUnknownLeaderEpoch = 75 // Errors.UNKNOWN_LEADER_EPOCH
+pub const ErrUnknownLeaderEpoch : Int16 = 75 // Errors.UNKNOWN_LEADER_EPOCH
 
 ///|
-const ErrUnsupportedCompressionType = 76 // Errors.UNSUPPORTED_COMPRESSION_TYPE
+pub const ErrUnsupportedCompressionType : Int16 = 76 // Errors.UNSUPPORTED_COMPRESSION_TYPE
 
 ///|
-const ErrStaleBrokerEpoch = 77 // Errors.STALE_BROKER_EPOCH
+pub const ErrStaleBrokerEpoch : Int16 = 77 // Errors.STALE_BROKER_EPOCH
 
 ///|
-const ErrOffsetNotAvailable = 78 // Errors.OFFSET_NOT_AVAILABLE
+pub const ErrOffsetNotAvailable : Int16 = 78 // Errors.OFFSET_NOT_AVAILABLE
 
 ///|
-const ErrMemberIdRequired = 79 // Errors.MEMBER_ID_REQUIRED
+pub const ErrMemberIdRequired : Int16 = 79 // Errors.MEMBER_ID_REQUIRED
 
 ///|
-const ErrPreferredLeaderNotAvailable = 80 // Errors.PREFERRED_LEADER_NOT_AVAILABLE
+pub const ErrPreferredLeaderNotAvailable : Int16 = 80 // Errors.PREFERRED_LEADER_NOT_AVAILABLE
 
 ///|
-const ErrGroupMaxSizeReached = 81 // Errors.GROUP_MAX_SIZE_REACHED
+pub const ErrGroupMaxSizeReached : Int16 = 81 // Errors.GROUP_MAX_SIZE_REACHED
 
 ///|
-const ErrFencedInstancedId = 82 // Errors.FENCED_INSTANCE_ID
+pub const ErrFencedInstancedId : Int16 = 82 // Errors.FENCED_INSTANCE_ID
 
 ///|
-const ErrEligibleLeadersNotAvailable = 83 // Errors.ELIGIBLE_LEADERS_NOT_AVAILABLE
+pub const ErrEligibleLeadersNotAvailable : Int16 = 83 // Errors.ELIGIBLE_LEADERS_NOT_AVAILABLE
 
 ///|
-const ErrElectionNotNeeded = 84 // Errors.ELECTION_NOT_NEEDED
+pub const ErrElectionNotNeeded : Int16 = 84 // Errors.ELECTION_NOT_NEEDED
 
 ///|
-const ErrNoReassignmentInProgress = 85 // Errors.NO_REASSIGNMENT_IN_PROGRESS
+pub const ErrNoReassignmentInProgress : Int16 = 85 // Errors.NO_REASSIGNMENT_IN_PROGRESS
 
 ///|
-const ErrGroupSubscribedToTopic = 86 // Errors.GROUP_SUBSCRIBED_TO_TOPIC
+pub const ErrGroupSubscribedToTopic : Int16 = 86 // Errors.GROUP_SUBSCRIBED_TO_TOPIC
 
 ///|
-const ErrInvalidRecord = 87 // Errors.INVALID_RECORD
+pub const ErrInvalidRecord : Int16 = 87 // Errors.INVALID_RECORD
 
 ///|
-const ErrUnstableOffsetCommit = 88 // Errors.UNSTABLE_OFFSET_COMMIT
+pub const ErrUnstableOffsetCommit : Int16 = 88 // Errors.UNSTABLE_OFFSET_COMMIT
 
 ///|
-const ErrThrottlingQuotaExceeded = 89 // Errors.THROTTLING_QUOTA_EXCEEDED
+pub const ErrThrottlingQuotaExceeded : Int16 = 89 // Errors.THROTTLING_QUOTA_EXCEEDED
 
 ///|
-const ErrProducerFenced = 90 // Errors.PRODUCER_FENCED
+pub const ErrProducerFenced : Int16 = 90 // Errors.PRODUCER_FENCED
 
 ///|
 pub impl Show for KError with output(self, logger) {
   // Error messages stolen/adapted from
   // https://kafka.apache.org/protocol#protocol_error_codes
   guard self is KError(v)
-  let msg = match v.to_int() {
+  let msg = match v {
     ErrNoError => "kafka server: Not an error, why are you printing me?"
     ErrUnknown => "kafka server: Unexpected (unknown?) server error"
     ErrOffsetOutOfRange =>

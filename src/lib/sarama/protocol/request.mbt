@@ -9,18 +9,16 @@ pub trait ProtocolBody: Encoder + VersionedDecoder + Show {
 }
 
 ///|
-pub(all) struct Request {
-  mut correlation_id : Int
-  mut client_id : String
-  mut body : &ProtocolBody?
-} derive(Default, Show)
+pub(all) struct Request[T] {
+  correlation_id : Int
+  client_id : String
+  body : T
+} derive(Show)
 
 ///|
-pub impl Encoder for Request with encode(self, pe) {
+pub impl[T : ProtocolBody] Encoder for Request[T] with encode(self, pe) {
   pe.push(LengthField::default())
-  guard self.body is Some(body) else {
-    raise PacketEncodingError("body is None")
-  }
+  let body = self.body
   pe.put_int16(body.key())
   pe.put_int16(body.version())
   pe.put_int32(self.correlation_id)
@@ -36,24 +34,28 @@ pub impl Encoder for Request with encode(self, pe) {
 }
 
 ///|
-pub impl Decoder for Request with decode(self, pd) {
+pub fn Request::decode(
+  pd : &PacketDecoder,
+) -> Request[ProtocolBodyAdapter] raise PacketDecodingError {
   let key = pd.get_int16()
   let version = pd.get_int16()
-  self.correlation_id = pd.get_int32()
-  self.client_id = pd.get_string()
+  let correlation_id = pd.get_int32()
+  let client_id = pd.get_string()
   guard allocate_body(key, version) is Some(body) else {
     raise PacketDecodingError("unknown request key (\{key})")
   }
-  self.body = Some(body)
   if body.header_version() >= 2 {
     // tagged field
     ignore(pd.get_uvarint())
   }
   VersionedDecoder::decode(body, pd, version)
+  { correlation_id, client_id, body }
 }
 
 ///|
-pub async fn decode_request(r : &@io.Reader) -> (Request, Int) {
+pub async fn decode_request(
+  r : &@io.Reader,
+) -> (Request[ProtocolBodyAdapter], Int) {
   let lengthBytes = r.read_exactly(4)
   guard lengthBytes is [u32be(length)]
   if length <= 4 || length > MaxRequestSize {
@@ -63,14 +65,13 @@ pub async fn decode_request(r : &@io.Reader) -> (Request, Int) {
   }
   let encodedReq = r.read_exactly(length.reinterpret_as_int())
   let bytesRead = 4 + encodedReq.length()
-  let req = Request::default()
-  decode(encodedReq.to_array(), req)
+  let req = decode(encodedReq, Request::decode)
   return (req, bytesRead)
 }
 
 ///|
-pub fn allocate_body(key : Int16, version : Int16) -> &ProtocolBody? {
-  let body : &ProtocolBody = match key {
+pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
+  let body : ProtocolBodyAdapter = match key {
     // apiKeyProduce => ProduceRequest::new(version)
     // apiKeyFetch => FetchRequest::new(version)
     // apiKeyListOffsets => OffsetRequest::new(version)
@@ -89,7 +90,7 @@ pub fn allocate_body(key : Int16, version : Int16) -> &ProtocolBody? {
     // apiKeyDescribeGroups => DescribeGroupsRequest::new(version)
     // apiKeyListGroups => ListGroupsRequest::new(version)
     // apiKeySaslHandshake => SaslHandshakeRequest::new(version)
-    ApiKeyApiVersions => ApiVersionsRequest::new(version)
+    ApiKeyApiVersions => ApiVersions(ApiVersionsRequest::new(version))
     // apiKeyCreateTopics => CreateTopicsRequest::new(version)
     // apiKeyDeleteTopics => DeleteTopicsRequest::new(version)
     // apiKeyDeleteRecords => DeleteRecordsRequest::new(version)
@@ -148,4 +149,65 @@ pub fn allocate_body(key : Int16, version : Int16) -> &ProtocolBody? {
     _ => return None
   }
   Some(body)
+}
+
+///|
+pub enum ProtocolBodyAdapter {
+  ApiVersions(ApiVersionsRequest)
+} derive(Show)
+
+///|
+pub impl ProtocolBody for ProtocolBodyAdapter with key(self) {
+  match self {
+    ApiVersions(body) => body.key()
+  }
+}
+
+///|
+pub impl ProtocolBody for ProtocolBodyAdapter with version(self) {
+  match self {
+    ApiVersions(body) => body.version()
+  }
+}
+
+///|
+pub impl ProtocolBody for ProtocolBodyAdapter with set_version(self, version) {
+  match self {
+    ApiVersions(body) => body.set_version(version)
+  }
+}
+
+///|
+pub impl ProtocolBody for ProtocolBodyAdapter with header_version(self) {
+  match self {
+    ApiVersions(body) => body.header_version()
+  }
+}
+
+///|
+pub impl ProtocolBody for ProtocolBodyAdapter with is_valid_version(self) {
+  match self {
+    ApiVersions(body) => body.is_valid_version()
+  }
+}
+
+///|
+pub impl ProtocolBody for ProtocolBodyAdapter with required_version(self) {
+  match self {
+    ApiVersions(body) => body.required_version()
+  }
+}
+
+///|
+pub impl VersionedDecoder for ProtocolBodyAdapter with decode(self, pd, version) {
+  match self {
+    ApiVersions(body) => body.decode(pd, version)
+  }
+}
+
+///|
+pub impl Encoder for ProtocolBodyAdapter with encode(self, pe) {
+  match self {
+    ApiVersions(body) => body.encode(pe)
+  }
 }

@@ -28,14 +28,14 @@ let errInvalidBool : PacketDecodingError = PacketDecodingError("invalid bool")
 
 ///|
 struct RealDecoder {
-  raw : ArrayView[Byte]
+  raw : BytesView
   mut off : Int
   stack : Array[&PushDecoder]
   // registry :metrics.Registry
 }
 
 ///|
-pub fn RealDecoder::new(raw : ArrayView[Byte]) -> RealDecoder {
+pub fn RealDecoder::new(raw : BytesView) -> RealDecoder {
   { raw, off: 0, stack: Array::new() }
 }
 
@@ -246,9 +246,7 @@ pub impl PacketDecoder for RealDecoder with get_string(self) {
   if n == -1 {
     return ""
   }
-  let tmpStr = @encoding/utf8.decode(
-    self.raw[self.off:self.off + n].to_array() |> Bytes::from_array,
-  ) catch {
+  let tmpStr = @encoding/utf8.decode(self.raw[self.off:self.off + n].to_bytes()) catch {
     _ => raise PacketDecodingError("failed to decode string")
   }
   self.off += n
@@ -261,9 +259,7 @@ pub impl PacketDecoder for RealDecoder with get_nullable_string(self) {
   if n == -1 {
     return None
   }
-  let tmpStr = @encoding/utf8.decode(
-    self.raw[self.off:self.off + n].to_array() |> Bytes::from_array,
-  ) catch {
+  let tmpStr = @encoding/utf8.decode(self.raw[self.off:self.off + n].to_bytes()) catch {
     _ => raise PacketDecodingError("failed to decode string")
   }
   self.off += n
@@ -278,7 +274,7 @@ pub impl PacketDecoder for RealDecoder with get_compact_string(self) {
     raise errInvalidByteSliceLength
   }
   let tmpStr = @encoding/utf8.decode(
-    self.raw[self.off:self.off + length].to_array() |> Bytes::from_array,
+    self.raw[self.off:self.off + length].to_bytes(),
   ) catch {
     _ => raise PacketDecodingError("failed to decode string")
   }
@@ -297,7 +293,7 @@ pub impl PacketDecoder for RealDecoder with get_compact_nullable_string(self) {
     raise errInvalidByteSliceLength
   }
   let tmpStr = @encoding/utf8.decode(
-    self.raw[self.off:self.off + length].to_array() |> Bytes::from_array,
+    self.raw[self.off:self.off + length].to_bytes(),
   ) catch {
     _ => raise PacketDecodingError("failed to decode string")
   }
@@ -394,7 +390,7 @@ pub impl PacketDecoder for RealDecoder with get_raw_bytes(self, length : Int) {
   }
   let start = self.off
   self.off += length
-  self.raw[start:self.off].to_array()
+  self.raw[start:self.off]
 }
 
 ///|

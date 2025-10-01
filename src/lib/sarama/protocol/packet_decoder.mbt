@@ -17,10 +17,10 @@ pub trait PacketDecoder {
   get_empty_tagged_field_array(Self) -> Int raise PacketDecodingError
 
   // Collections
-  get_bytes(Self) -> ArrayView[Byte]? raise PacketDecodingError
-  get_varint_bytes(Self) -> ArrayView[Byte]? raise PacketDecodingError
-  get_compact_bytes(Self) -> ArrayView[Byte] raise PacketDecodingError
-  get_raw_bytes(Self, length : Int) -> ArrayView[Byte] raise PacketDecodingError
+  get_bytes(Self) -> BytesView? raise PacketDecodingError
+  get_varint_bytes(Self) -> BytesView? raise PacketDecodingError
+  get_compact_bytes(Self) -> BytesView raise PacketDecodingError
+  get_raw_bytes(Self, length : Int) -> BytesView raise PacketDecodingError
   get_string(Self) -> String raise PacketDecodingError
   get_nullable_string(Self) -> String? raise PacketDecodingError
   get_compact_string(Self) -> String raise PacketDecodingError
@@ -60,7 +60,7 @@ pub trait PushDecoder {
   // Indicates that all required data is now available to calculate and check the field.
   // SaveOffset is guaranteed to have been called first. The implementation should read ReserveLength() bytes
   // of data from the saved offset, and verify it based on the data between the saved offset and curOffset.
-  check(Self, curOffset : Int, buf : ArrayView[Byte]) -> Unit raise
+  check(Self, curOffset : Int, buf : BytesView) -> Unit raise
 
   // dynamicPushDecoder extends the interface of pushDecoder for uses cases where the length of the
   // fields itself is unknown until its value was decoded (for instance varint encoded length

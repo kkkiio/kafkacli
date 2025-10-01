@@ -29,7 +29,7 @@ pub fn encode(e : &Encoder) -> Bytes raise {
 // Anything implementing Decoder can be extracted from bytes using Kafka's encoding rules.
 
 ///|
-trait Decoder {
+pub trait Decoder {
   decode(Self, &PacketDecoder) -> Unit raise PacketDecodingError
 }
 
@@ -42,23 +42,24 @@ pub trait VersionedDecoder {
 // interpreted using Kafka's encoding rules.
 
 ///|
-pub fn decode(
-  buf : Array[Byte],
-  in_ : &Decoder,
-) -> Unit raise PacketDecodingError {
-  let helper = RealDecoder::new(buf)
-  in_.decode(helper)
-  if helper.off != buf.length() {
+pub fn[T] decode(
+  bytes : BytesView,
+  decode : (&PacketDecoder) -> T raise PacketDecodingError,
+) -> T raise PacketDecodingError {
+  let helper = RealDecoder::new(bytes)
+  let result = decode(helper)
+  if helper.off != bytes.length() {
     raise PacketDecodingError(
-      "invalid length (\{helper.off}, len=\{buf.length()})",
+      "invalid length (\{helper.off}, len=\{bytes.length()})",
     )
   }
+  result
 }
 
 ///|
-pub fn versioned_decode(
-  buf : Array[Byte],
-  in_ : &VersionedDecoder,
+pub fn[T : VersionedDecoder] versioned_decode(
+  buf : BytesView,
+  in_ : T,
   version : Int16,
 ) -> Unit raise PacketDecodingError {
   let helper = RealDecoder::new(buf)

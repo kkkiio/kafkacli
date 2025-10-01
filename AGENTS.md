@@ -1,3 +1,11 @@
+# Kafka CLI
+
+用 `moon run src/cmd/kafkacli` 运行 kafkacli 命令, 例如:
+
+```bash
+moon run src/cmd/kafkacli -- api-versions --bootstrap-server localhost:9092
+```
+
 # MoonBit Project Layouts
 
 You have the ability to detect specific types of MoonBit projects and work with

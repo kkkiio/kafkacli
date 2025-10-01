@@ -20,7 +20,7 @@ fn test_varint_one(x : Int64) -> Unit raise {
   let buf = Array::make(MaxVarintLen64, b'\x00')
   let n = put_varint(buf, x)
   buf.resize(n, b'\x00')
-  let (y, m) = varint(buf)
+  let (y, m) = varint(buf |> Bytes::from_array)
   assert_eq(y, x)
   assert_eq(m, n)
   let prefix = b"prefix"
@@ -28,7 +28,7 @@ fn test_varint_one(x : Int64) -> Unit raise {
   append_varint(buf2, x) |> ignore
   let expected = [prefix.to_array(), buf].flatten()
   assert_eq(buf2, expected)
-  let yy = read_varint(buf)
+  let yy = read_varint(buf |> Bytes::from_array)
   assert_eq(yy, x)
 }
 
@@ -38,7 +38,7 @@ fn test_uvarint_one(x : UInt64) -> Unit raise {
   let buf = Array::make(MaxVarintLen64, b'\x00')
   let n = put_uvarint(buf, x)
   buf.resize(n, b'\x00')
-  let (y, m) = uvarint(buf)
+  let (y, m) = uvarint(buf |> Bytes::from_array)
   assert_eq(y, x)
   assert_eq(m, n)
   let prefix = b"prefix"
@@ -46,7 +46,7 @@ fn test_uvarint_one(x : UInt64) -> Unit raise {
   append_uvarint(buf2, x) |> ignore
   let expected = [prefix.to_array(), buf].flatten()
   assert_eq(buf2, expected)
-  let yy = read_uvarint(buf)
+  let yy = read_uvarint(buf |> Bytes::from_array)
   assert_eq(yy, x)
 }
 
@@ -121,12 +121,11 @@ test "TestBufferTooSmall" {
   let base = [b'\x80', b'\x80', b'\x80', b'\x80']
   for i = 0; i <= base.length(); i = i + 1 {
     let part = Array::make(i, b'\x80')
-    let bytes = part[:]
-    let (val, n) = uvarint(bytes)
+    let (val, n) = uvarint(part |> Bytes::from_array)
     assert_eq(val, 0UL)
     assert_eq(n, 0)
     try {
-      read_uvarint(bytes) |> ignore
+      read_uvarint(part |> Bytes::from_array) |> ignore
       fail("should not reach here")
     } catch {
       DecodeError::ErrEOF => assert_true(i == 0)
@@ -141,11 +140,10 @@ test "TestBufferTooSmall" {
 /// 溢出用例（超过 MaxVarintLen64 字节）
 test "TestOverflowBasic" {
   let arr = Array::make(11, b'\xff')
-  let bytes = arr[:]
-  let (_, n) = uvarint(bytes)
+  let (_, n) = uvarint(arr |> Bytes::from_array)
   assert_eq(n, -11)
   try {
-    read_uvarint(bytes) |> ignore
+    read_uvarint(arr |> Bytes::from_array) |> ignore
     assert_true(false)
   } catch {
     DecodeError::ErrOverflow => ()

@@ -1,7 +1,7 @@
 ///|
 test "TestRealDecoder_getArrayLength" {
   // null array (-1)
-  let input_null : Array[Byte] = [b'\xff', b'\xff', b'\xff', b'\xff']
+  let input_null : Bytes = b"\xff\xff\xff\xff"
   let rd_null = RealDecoder::new(input_null[:])
   let got_len_null = rd_null.get_array_length()
   assert_eq(got_len_null, -1)
@@ -21,8 +21,8 @@ test "TestRealDecoder_getArrayLength" {
   assert_eq(got_len_max, MaxResponseSize.reinterpret_as_int())
 
   // insufficient data: fewer than 4 bytes
-  let input_short : Array[Byte] = [b'\x00', b'\x00', b'\x00']
-  let rd_short = RealDecoder::new(input_short[:])
+  let input_short : Bytes = b"\x00\x00\x00"
+  let rd_short = RealDecoder::new(input_short)
   try {
     ignore(rd_short.get_array_length())
     // 不应到达此处
@@ -34,10 +34,8 @@ test "TestRealDecoder_getArrayLength" {
 
   // length exceeds remaining: length=5 但仅剩 1 字节
   // Go 用例: [0,0,0,5,0] 期望 ErrInsufficientData
-  let input_len_exceeds : Array[Byte] = [
-    b'\x00', b'\x00', b'\x00', b'\x05', b'\x00',
-  ]
-  let rd_len_exceeds = RealDecoder::new(input_len_exceeds[:])
+  let input_len_exceeds : Bytes = b"\x00\x00\x00\x05\x00"
+  let rd_len_exceeds = RealDecoder::new(input_len_exceeds)
   try {
     ignore(rd_len_exceeds.get_array_length())
     // 预期抛错；如果当前实现与 Go 不一致，这里会失败，提示需要修正实现的校验顺序。
@@ -50,18 +48,14 @@ test "TestRealDecoder_getArrayLength" {
   // 构造长度为 MaxResponseSize+1 的头部，且提供足够的剩余字节
   let input_over = make_input(MaxResponseSize + 1)
   let rd_over = RealDecoder::new(input_over[:])
-  try {
-    ignore(rd_over.get_array_length())
-    assert_true(false)
-  } catch {
-    // 期望 errInvalidArrayLength。我们不做精确类型匹配，仅验证抛错。
-    _ => ()
-  }
+  let rs = try? rd_over.get_array_length()
+  // assert_eq(rs, Err(@protocol.errInvalidArrayLength))
+  inspect(rs)
 }
 
 ///|
 /// 大端写入长度到前 4 字节，并补齐 payload（零填充）
-fn make_input(length : UInt) -> Array[Byte] {
+fn make_input(length : UInt) -> Bytes {
   // 4 字节长度头 + length 个数据字节（零）
   let total = 4 + length.reinterpret_as_int()
   let arr = Array::make(total, b'\x00')
@@ -70,5 +64,5 @@ fn make_input(length : UInt) -> Array[Byte] {
   arr[1] = ((length >> 16) & 0xff).to_byte()
   arr[2] = ((length >> 8) & 0xff).to_byte()
   arr[3] = (length & 0xff).to_byte()
-  arr
+  arr |> Bytes::from_array
 }

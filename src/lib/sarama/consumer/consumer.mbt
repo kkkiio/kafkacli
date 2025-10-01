@@ -24,7 +24,7 @@ pub trait PartitionConsumer {
   pause(Self) -> Result[Unit, String]
 
   /// Resume consuming from this partition
-  resume(Self) -> Result[Unit, String]
+  resume_(Self) -> Result[Unit, String]
 
   /// Check if consumer is closed
   is_closed(Self) -> Bool

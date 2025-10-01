@@ -1,5 +1,5 @@
 ///|
-typealias Int64 as Milliseconds
+pub typealias Int64 as Milliseconds
 
 ///|
 const DefaultRetryBackoffMs : Milliseconds = 100
