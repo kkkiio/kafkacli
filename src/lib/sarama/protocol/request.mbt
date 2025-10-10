@@ -1,5 +1,5 @@
 ///|
-pub trait ProtocolBody: Encoder + VersionedDecoder + Show {
+pub trait ProtocolBody: Encoder + VersionedDecoder + ToJson {
   key(Self) -> Int16
   version(Self) -> Int16
   set_version(Self, Int16) -> Unit
@@ -13,7 +13,7 @@ pub(all) struct Request[T] {
   correlation_id : Int
   client_id : String
   body : T
-} derive(Show)
+} derive(ToJson)
 
 ///|
 pub impl[T : ProtocolBody] Encoder for Request[T] with encode(self, pe) {
@@ -75,7 +75,14 @@ pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
     // apiKeyProduce => ProduceRequest::new(version)
     // apiKeyFetch => FetchRequest::new(version)
     // apiKeyListOffsets => OffsetRequest::new(version)
-    // apiKeyMetadata => MetadataRequest::new(version)
+    ApiKeyMetadata =>
+      Metadata(MetadataRequest::{
+        version,
+        topics: [],
+        allow_auto_topic_creation: false,
+        include_cluster_authorized_operations: false,
+        include_topic_authorized_operations: false,
+      })
     // 4: LeaderAndIsrRequest
     // 5: StopReplicaRequest
     // 6: UpdateMetadataRequest
@@ -154,12 +161,14 @@ pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
 ///|
 pub enum ProtocolBodyAdapter {
   ApiVersions(ApiVersionsRequest)
-} derive(Show)
+  Metadata(MetadataRequest)
+} derive(Show, ToJson)
 
 ///|
 pub impl ProtocolBody for ProtocolBodyAdapter with key(self) {
   match self {
     ApiVersions(body) => body.key()
+    Metadata(body) => body.key()
   }
 }
 
@@ -167,6 +176,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with key(self) {
 pub impl ProtocolBody for ProtocolBodyAdapter with version(self) {
   match self {
     ApiVersions(body) => body.version()
+    Metadata(body) => body.version()
   }
 }
 
@@ -174,6 +184,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with version(self) {
 pub impl ProtocolBody for ProtocolBodyAdapter with set_version(self, version) {
   match self {
     ApiVersions(body) => body.set_version(version)
+    Metadata(body) => body.set_version(version)
   }
 }
 
@@ -181,6 +192,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with set_version(self, version) {
 pub impl ProtocolBody for ProtocolBodyAdapter with header_version(self) {
   match self {
     ApiVersions(body) => body.header_version()
+    Metadata(body) => body.header_version()
   }
 }
 
@@ -188,6 +200,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with header_version(self) {
 pub impl ProtocolBody for ProtocolBodyAdapter with is_valid_version(self) {
   match self {
     ApiVersions(body) => body.is_valid_version()
+    Metadata(body) => body.is_valid_version()
   }
 }
 
@@ -195,6 +208,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with is_valid_version(self) {
 pub impl ProtocolBody for ProtocolBodyAdapter with required_version(self) {
   match self {
     ApiVersions(body) => body.required_version()
+    Metadata(body) => body.required_version()
   }
 }
 
@@ -202,6 +216,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with required_version(self) {
 pub impl VersionedDecoder for ProtocolBodyAdapter with decode(self, pd, version) {
   match self {
     ApiVersions(body) => body.decode(pd, version)
+    Metadata(body) => body.decode(pd, version)
   }
 }
 
@@ -209,5 +224,6 @@ pub impl VersionedDecoder for ProtocolBodyAdapter with decode(self, pd, version)
 pub impl Encoder for ProtocolBodyAdapter with encode(self, pe) {
   match self {
     ApiVersions(body) => body.encode(pe)
+    Metadata(body) => body.encode(pe)
   }
 }

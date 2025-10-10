@@ -43,7 +43,7 @@ pub struct ResponseHeader {
 pub struct Response {
   header : ResponseHeader
   body : &ProtocolBody
-} derive(Show)
+} derive(ToJson)
 
 ///|
 /// Produce request structure
@@ -148,15 +148,6 @@ pub struct FetchPartitionResponse {
 pub struct AbortedTransaction {
   producer_id : Int64
   first_offset : Int64
-} derive(Show, ToJson)
-
-///|
-/// Metadata request structure
-pub struct MetadataRequest {
-  topics : Array[String]?
-  allow_auto_topic_creation : Bool
-  include_cluster_authorized_operations : Bool
-  include_topic_authorized_operations : Bool
 } derive(Show, ToJson)
 
 ///|

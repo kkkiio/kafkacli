@@ -50,7 +50,7 @@ test "TestRealDecoder_getArrayLength" {
   let rd_over = RealDecoder::new(input_over[:])
   let rs = try? rd_over.get_array_length()
   // assert_eq(rs, Err(@protocol.errInvalidArrayLength))
-  inspect(rs)
+  inspect(rs, content="Err(kafka: error decoding packet: invalid array length)")
 }
 
 ///|

@@ -454,45 +454,7 @@
 // }
 
 ///|
-async fn[T : ProtocolBody] test_request(
-  name : String,
-  rb : T,
-  expected : Bytes,
-) -> Unit {
-  if !rb.required_version().is_at_least(min_version) {
-    fail("Request \{name} has invalid required version")
-  }
-  let packet = test_request_encode(name, rb, expected)
-  test_request_decode(rb, packet)
-}
-
-///|
-async fn test_request_without_byte_comparison(
-  name : String,
-  rb : &ProtocolBody,
-) -> Unit {
-  if !rb.required_version().is_at_least(min_version) {
-    fail("Request \{name} has invalid required version")
-  }
-  let packet = test_request_encode(name, rb, Bytes::default())
-  test_request_decode(rb, packet)
-}
-
-///|
-fn[T : ProtocolBody] test_request_encode(
-  _ : String,
-  rb : T,
-  expected : Bytes,
-) -> Bytes raise {
-  let (packet, body_offset) = encode_request(rb)
-  if expected.length() > 0 {
-    assert_eq(packet[body_offset:], expected)
-  }
-  return packet
-}
-
-///|
-fn[T : ProtocolBody] encode_request(body : T) -> (Bytes, Int) raise {
+fn[T : ProtocolBody] encode_test_request(body : T) -> (Bytes, Int) raise {
   let req = Request::{ correlation_id: 123, client_id: "foo", body }
   let packet = encode(req)
   let header_size = match body.header_version() {
@@ -508,15 +470,16 @@ fn[T : ProtocolBody] test_request_decode(rb : T, packet : Bytes) -> Unit raise {
   guard packet is [u32be(n), .. body_bytes]
   assert_eq(n, body_bytes.length().reinterpret_as_uint())
   let decoded = decode(body_bytes, Request::decode)
-  guard decoded.body is decoded_body else { fail("Decoded body is None") }
+  guard decoded.body is body_adapter
   assert_eq(decoded.correlation_id, 123)
   assert_eq(decoded.client_id, "foo")
-  assert_eq(rb.to_string(), decoded_body.to_string())
-  assert_eq(rb.version(), decoded_body.version())
+  assert_eq(rb.version(), body_adapter.version())
+  guard body_adapter.to_json() is [_, rb_json]
+  assert_eq(rb.to_json(), rb_json)
 }
 
 ///|
-fn[A : VersionedDecoder + Show] test_response(
+fn[A : VersionedDecoder + ToJson] test_response(
   res : &ProtocolBody,
   expected : Bytes,
   decoded : A,
@@ -524,7 +487,7 @@ fn[A : VersionedDecoder + Show] test_response(
   let encoded = encode(res)
   assert_eq(encoded, expected)
   versioned_decode(encoded, decoded, res.version())
-  assert_eq(decoded.to_string(), res.to_string())
+  assert_eq(decoded.to_json(), res.to_json())
 }
 
 ///|

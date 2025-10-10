@@ -9,7 +9,7 @@ pub(all) struct ApiVersionsRequest {
   mut client_software_name : String
   // ClientSoftwareVersion contains the version of the client.
   mut client_software_version : String
-} derive(Show)
+} derive(Show, ToJson)
 
 ///|
 pub fn ApiVersionsRequest::new(version : Int16) -> ApiVersionsRequest {

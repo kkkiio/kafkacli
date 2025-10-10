@@ -170,12 +170,12 @@ pub impl PacketDecoder for RealDecoder with get_compact_array_length(self) {
 pub impl PacketDecoder for RealDecoder with get_bool(self) {
   let b = self.get_int8()
   if b == 0 {
+    false
+  } else if b == 1 {
+    true
+  } else {
     raise errInvalidBool
   }
-  if b != 1 {
-    raise errInvalidBool
-  }
-  true
 }
 
 ///|

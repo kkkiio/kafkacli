@@ -9,7 +9,7 @@ pub(all) struct ApiVersionsResponseKey {
   mut min_version : Int16
   /// MaxVersion contains the maximum supported version, inclusive.
   mut max_version : Int16
-} derive(Show, Default)
+} derive(Show, ToJson, Default)
 
 ///|
 pub fn[E : PacketEncoder] ApiVersionsResponseKey::encode(
@@ -51,7 +51,7 @@ pub(all) struct ApiVersionsResponse {
   mut api_keys : Array[ApiVersionsResponseKey]
   /// ThrottleTimeMs contains the duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
   mut throttle_time_ms : Int
-} derive(Show, Default)
+} derive(Show, Default, ToJson)
 
 ///|
 pub impl ProtocolBody for ApiVersionsResponse with set_version(self, version) {
