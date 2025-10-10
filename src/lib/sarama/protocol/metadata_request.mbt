@@ -1,10 +1,8 @@
 ///|
-/// UUID type for metadata requests (16 bytes)
-pub typealias FixedArray[Byte] as Uuid
-
-///|
 /// Null UUID constant for metadata requests
-pub let null_uuid : Uuid = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+pub let null_uuid : @uuid.UUID = (try? @uuid.from_bytes(
+  b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
+)).unwrap()
 
 ///|
 /// Metadata request structure for fetching topic metadata from Kafka cluster
@@ -79,7 +77,7 @@ pub impl Encoder for MetadataRequest with encode(self, pe) {
       // Version 10: use compact array with UUID and nullable topic name
       pe.put_compact_array_length(self.topics.length())
       for topic_name in self.topics {
-        pe.put_raw_bytes(null_uuid |> Bytes::from_fixedarray)
+        pe.put_raw_bytes(null_uuid.to_bytes())
         pe.put_nullable_compact_string(Some(topic_name))
         pe.put_empty_tagged_field_array()
       }

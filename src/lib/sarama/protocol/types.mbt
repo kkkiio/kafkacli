@@ -151,41 +151,54 @@ pub struct AbortedTransaction {
 } derive(Show, ToJson)
 
 ///|
-/// Metadata response structure
-pub struct MetadataResponse {
-  brokers : Array[BrokerMetadata]
-  cluster_id : String?
-  controller_id : Int
-  topics : Array[TopicMetadata]
-  cluster_authorized_operations : Int?
-} derive(Show, ToJson)
+/// Broker metadata structure (compatible with Kafka protocol)
+pub(all) struct BrokerMetadata {
+  mut id : Int // Kafka broker ID，对应Go sarama的id字段
+  mut host : String
+  mut port : Int
+  mut rack : String?
+  mut version : Int16 // 添加version字段用于编码解码
+} derive(Show, ToJson, Eq)
 
 ///|
-/// Broker metadata structure
-pub struct BrokerMetadata {
-  node_id : Int
-  host : String
-  port : Int
-  rack : String?
-} derive(Show, ToJson)
+/// Join host and port into address string
+pub fn join_host_port(host : String, port : Int) -> String {
+  host + ":" + port.to_string()
+}
 
 ///|
-/// Topic metadata structure
-pub struct TopicMetadata {
-  error : String?
-  is_internal : Bool
-  topic : String
-  partition_metadata : Array[PartitionMetadata]
-  topic_authorized_operations : Int?
-} derive(Show, ToJson)
+/// Encode broker metadata to packet encoder
+pub impl Encoder for BrokerMetadata with encode(self, pe) {
+  pe.put_int32(self.id)
+  pe.put_string(self.host)
+  pe.put_int32(self.port)
+
+  // Encode rack for versions 1+
+  if self.version >= 1 {
+    pe.put_nullable_string(self.rack)
+  }
+
+  // Add tagged fields for versions 9+
+  if self.version >= 9 {
+    pe.put_empty_tagged_field_array()
+  }
+}
 
 ///|
-/// Partition metadata structure
-pub struct PartitionMetadata {
-  error : String?
-  partition : Int
-  leader : Int
-  replicas : Array[Int]
-  isr : Array[Int]
-  offline_replicas : Array[Int]
-} derive(Show, ToJson)
+/// Decode broker metadata from packet decoder
+pub impl VersionedDecoder for BrokerMetadata with decode(self, pd, version) {
+  self.version = version
+  self.id = pd.get_int32()
+  self.host = pd.get_string()
+  self.port = pd.get_int32()
+
+  // Decode rack for versions 1+
+  if version >= 1 {
+    self.rack = pd.get_nullable_string()
+  }
+
+  // Skip tagged fields for versions 9+
+  if version >= 9 {
+    ignore(pd.get_empty_tagged_field_array())
+  }
+}

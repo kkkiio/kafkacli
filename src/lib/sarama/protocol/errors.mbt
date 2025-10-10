@@ -239,7 +239,13 @@ impl Show for ConfigurationError with output(self, logger) {
 // See https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ErrorCodes
 
 ///|
-pub suberror KError Int16
+pub(all) suberror KError Int16 derive(ToJson,Eq)
+
+///|
+pub fn KError::int_value(self : KError) -> Int16 {
+  guard self is KError(v)
+  v
+}
 
 // Numeric error codes returned by the Kafka server.
 

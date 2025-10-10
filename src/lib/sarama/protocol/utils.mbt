@@ -397,7 +397,7 @@ pub impl Show for KafkaVersion with output(self, logger) {
 //	config.Producer.Retry.BackoffFunc = backoffFunc
 
 ///|
-fn new_exponential_backoff(
+pub fn new_exponential_backoff(
   backoff : Milliseconds,
   maxBackoff : Milliseconds,
 ) -> ((Int, Int) -> Milliseconds) raise {
