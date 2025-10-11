@@ -13,14 +13,9 @@ pub async fn api_versions(broker : String) -> Unit {
     err => fail("Failed to connect to broker: \{err}, addr=\{addr}")
   }
   defer socket.close()
-  let body = @protocol.ApiVersionsRequest::{
-    version: 3,
-    client_software_name: "sarama",
-    client_software_version: "0.10.0",
-  }
+  let body = @protocol.ApiVersionsRequest::new(0)
   let req = @protocol.Request::{ body, correlation_id: 123, client_id: "foo" }
   let req_packet = @protocol.encode(req)
-  // let request = b"\x00\x00\x00\x24\x00\x12\x00\x03\x00\x00\x00\x01\x00\x07\x72\x64\x6b\x61\x66\x6b\x61\x00\x0b\x6c\x69\x62\x72\x64\x6b\x61\x66\x6b\x61\x06\x32\x2e\x30\x2e\x32\x00"
   socket.write(req_packet)
   guard (socket.read_exactly(4) catch {
       e => fail("Failed to read response size: \{e}")
@@ -31,6 +26,6 @@ pub async fn api_versions(broker : String) -> Unit {
   let response_bytes = socket.read_exactly(response_size.reinterpret_as_int())
   guard response_bytes is [u32be(_), .. payload]
   let response = @protocol.ApiVersionsResponse::default()
-  @protocol.versioned_decode(payload, response, 3)
+  @protocol.versioned_decode(payload, response, body.version)
   println("response: \{response}")
 }

@@ -2,6 +2,9 @@
 pub const DefaultClientSoftwareName : String = "sarama"
 
 ///|
+pub const DefaultClientSoftwareVersion : String = "0.1.0"
+
+///|
 pub(all) struct ApiVersionsRequest {
   // Version defines the protocol version to use for encode and decode
   mut version : Int16
