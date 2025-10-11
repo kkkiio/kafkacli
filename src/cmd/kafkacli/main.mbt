@@ -76,10 +76,41 @@ fn main {
         e => println("Error: \{e}")
       }
     }
+    "list-topics" => {
+      let usage =
+        #| Kafka list topics CLI tool
+        #| usage:
+        #|      kafkacli list-topics --bootstrap-server <broker>
+        #|
+      let bootstrap_servers = @ref.new("")
+      @ArgParser.parse(
+        [
+          (
+            "--bootstrap-server",
+            "-b",
+            Set_string(bootstrap_servers),
+            "bootstrap servers",
+          ),
+        ],
+        fn(_) {  },
+        usage,
+        argv,
+      )
+      let bootstrap_servers = match bootstrap_servers.val {
+        "" => {
+          println("bootstrap server is required")
+          return
+        }
+        _ => bootstrap_servers.val
+      }
+      @async.with_event_loop(fn(_) { list_topics(bootstrap_servers) }) catch {
+        e => println("Error: \{e}")
+      }
+    }
     "api-versions" => {
       let usage =
         #| Kafka API versions CLI tool
-        #| usage: 
+        #| usage:
         #|      kafkacli api-versions --bootstrap-server <broker>
         #|
       let bootstrap_servers = @ref.new("")
