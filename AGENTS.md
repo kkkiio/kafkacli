@@ -1,10 +1,31 @@
+<!-- OPENSPEC:START -->
+# OpenSpec Instructions
+
+These instructions are for AI assistants working in this project.
+
+Always open `@/openspec/AGENTS.md` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
+- Sounds ambiguous and you need the authoritative spec before coding
+
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
+
+Keep this managed block so 'openspec update' can refresh the instructions.
+
+<!-- OPENSPEC:END -->
+
 # Kafka CLI
 
-用 `moon run src/cmd/kafkacli` 运行 kafkacli 命令, 例如:
+`agents/specs/` 目录有各模块的规格(requirements.md)、设计(design.md)、实现文档(tasks.md).
 
-```bash
-moon run src/cmd/kafkacli -- api-versions --bootstrap-server localhost:9092
-```
+## Development
+
+执行 `moon test` 运行测试.
+
+编写快照测试时, 不要填`inspect`的`content`参数, 运行 `moon test --update` 自动生成.
 
 # MoonBit Project Layouts
 
@@ -47,6 +68,7 @@ Core facts that impact how you write and refactor code.
 Quick reference:
 
 ```moonbit
+
 ///|
 /// comments doc string
 pub fn sum(x : Int, y : Int) -> Int {
@@ -190,6 +212,7 @@ MoonBit's String is immutable utf16 encoded, `s[i]` returns an integer (code uni
 Since MoonBit supports char literal overloading, you can write code snippets like this:
 
 ```moonbit
+
 ///|
 test "String indexing" {
   let s = "hello world"
@@ -213,6 +236,7 @@ test "String indexing" {
 MoonBit uses `\{}` for string interpolation:
 
 ```moonbit
+
 ///|
 let point : Point = { x: 10, y: 20 }
 
@@ -240,6 +264,7 @@ test "String interpolation" {
 #### Multiple line strings
 
 ```moonbit
+
 ///|
 test "multiple line strings" {
   let multi_line_string : String =
@@ -275,6 +300,7 @@ From String to StringView using `s[:]`, from StringView to String using `s.to_st
 returns a `Byte`.
 
 ```moonbit
+
 ///|
 test "bytes literal" {
   let b0 : Bytes = b"abcd"
@@ -291,6 +317,7 @@ From Bytes to BytesView using `b[:]`, from BytesView to Bytes using `b.to_bytes(
 MoonBit Array is resizable array, FixedArray is fixed size array.
 
 ```moonbit
+
 ///|
 test "array literal" {
   let a0 : Array[Int] = [1, 2, 3] // resizable
@@ -308,6 +335,7 @@ MoonBit provides a built-in `Map` type that preserves insertion order (like
 JavaScript's Map):
 
 ```moonbit
+
 ///|
 /// Map literal syntax
 let map : Map[String, Int] = { "a": 1, "b": 2, "c": 3 }
@@ -351,6 +379,7 @@ MoonBit supports Byte, Int, UInt, Int64, UInt64, etc. When the type is known,
 the literal can be overloaded:
 
 ```moonbit
+
 ///|
 test "int and char literal" {
   let a0 : Int = 1
@@ -367,6 +396,7 @@ test "int and char literal" {
 ## Complex Types
 
 ```moonbit
+
 ///|
 ///  Type aliases use 'typealias'
 typealias Int as UserId // Int is aliased to UserId - no runtime overhead
@@ -424,6 +454,7 @@ MoonBit passes most types by reference semantically (the optimizer may copy
 immutables):
 
 ```moonbit
+
 ///|
 ///  Structs with 'mut' fields are always passed by reference
 struct Counter {
@@ -462,6 +493,7 @@ test "ref swap" {
 MoonBit's pattern matching is comprehensive and exhaustive:
 
 ```moonbit
+
 ///|
 /// Destructure arrays with rest patterns
 fn process_array(arr : Array[Int]) -> String {
@@ -502,6 +534,7 @@ fn is_palindrome(s : StringView) -> Bool {
 The `loop` construct is unique to MoonBit:
 
 ```moonbit
+
 ///|
 /// Functional loop with pattern matching on loop variables
 /// @list.List is from the standard library
@@ -538,6 +571,7 @@ fn find_pair(arr : Array[Int], target : Int) -> (Int, Int)? {
 `for` loops have unique MoonBit features:
 
 ```moonbit
+
 ///|
 test "functional for loop" {
   // For loop with multiple loop variables,
@@ -565,6 +599,7 @@ test "functional for loop" {
 ## Label and Optional Parameters
 
 ```moonbit
+
 ///|
 type Window
 
@@ -598,6 +633,7 @@ test "use function with label and optional parameter" {
 MoonBit uses **checked** error-throwing functions, not unchecked exceptions:
 
 ```moonbit
+
 ///|
 ///  Declare error types with 'suberror'
 suberror ValueError String
@@ -696,6 +732,7 @@ fn handle_parse(s : String) -> Int {
 Methods use `Type::method_name` syntax, traits require explicit implementation:
 
 ```moonbit
+
 ///|
 struct Rectangle {
   width : Double
@@ -745,6 +782,7 @@ impl Hash for Rectangle with hash_combine(self, hasher) {
 MoonBit supports operator overloading through traits:
 
 ```moonbit
+
 ///|
 struct Vector(Int, Int)
 
@@ -784,6 +822,7 @@ test "overloading" {
 MoonBit has fine-grained visibility control:
 
 ```moonbit
+
 ///|
 /// `fn` defaults to Private - only visible in current package
 fn internal_helper() -> Unit {
@@ -1076,6 +1115,7 @@ Embed external files as MoonBit code:
 Generated code example:
 
 ```moonbit
+
 ///|
 let data : String =
   #|hello,
@@ -1089,6 +1129,7 @@ Write documentation using `///` comments (started with `///|` to delimit the
 block code)
 
 ````moonbit
+
 ///|
 /// Get the largest element of a non-empty `Array`.
 ///
