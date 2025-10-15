@@ -135,7 +135,7 @@ pub struct RecordHeader {
 
 ///|
 /// Consumer message structure
-pub struct ConsumerMessage {
+pub(all) struct ConsumerMessage {
   headers : Array[RecordHeader]
   timestamp : Int64 // Unix timestamp in milliseconds
   block_timestamp : Int64 // Outer (compressed) block timestamp

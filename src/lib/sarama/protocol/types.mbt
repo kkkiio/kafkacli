@@ -84,7 +84,6 @@ pub struct ProducePartitionResponse {
   log_append_time : Int64?
 } derive(Show, ToJson)
 
-
 ///|
 /// Broker metadata structure (compatible with Kafka protocol)
 pub(all) struct BrokerMetadata {
@@ -92,7 +91,7 @@ pub(all) struct BrokerMetadata {
   mut host : String
   mut port : Int
   mut rack : String?
-  mut version : Int16 // 添加version字段用于编码解码
+  mut version : Int // 添加version字段用于编码解码
 } derive(Show, ToJson, Eq)
 
 ///|
@@ -122,7 +121,7 @@ pub impl Encoder for BrokerMetadata with encode(self, pe) {
 ///|
 /// Decode broker metadata from packet decoder
 pub impl VersionedDecoder for BrokerMetadata with decode(self, pd, version) {
-  self.version = version
+  self.version = version.to_int()
   self.id = pd.get_int32()
   self.host = pd.get_string()
   self.port = pd.get_int32()

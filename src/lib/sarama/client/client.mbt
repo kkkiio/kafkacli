@@ -238,11 +238,11 @@ pub fn kafka_client_leader(
   client : KafkaClient,
   _topic : String,
   _partition_id : Int,
-) -> Result[Broker, String] {
+) -> Broker raise {
   // TODO: Implement actual leader discovery
   match client.brokers.length() > 0 {
-    true => Ok(client.brokers[0])
-    false => Err("No brokers available")
+    true => client.brokers[0]
+    false => fail("No brokers available")
   }
 }
 

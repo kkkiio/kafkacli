@@ -58,3 +58,60 @@ pub fn consume(
   //   // print_nl_flush(bytes)
   // }
 }
+
+///|
+/// Consume messages from a specific partition
+pub async fn consume_partition(
+  broker : String,
+  topic : String,
+  partition : Int,
+  offset : Int64,
+) -> Unit {
+  println("Starting partition consumer...")
+  println("Topic: \{topic}")
+  println("Partition: \{partition}")
+  println("Offset: \{offset}")
+  println("Broker: \{broker}")
+
+  // Create client configuration
+  let config = @core.Config::new()
+
+  // Create Kafka client
+  let broker_list = [broker]
+  let client = @client.KafkaClient::new(config, broker_list)
+
+  // Create consumer
+  let consumer = @consumer.consumer_new(client)
+
+  // Create partition consumer
+  let partition_consumer = @consumer.consumer_consume_partition(
+    consumer, topic, partition, offset,
+  )
+  println("Partition consumer created successfully")
+
+  // Fetch messages
+  let messages = partition_consumer.fetch_messages()
+  println("Fetched \{messages.length()} messages")
+  let mut i = 0
+  while i < messages.length() {
+    let msg = messages[i]
+    println("Message \{i}:")
+    println("  Topic: \{msg.topic}")
+    println("  Partition: \{msg.partition}")
+    println("  Offset: \{msg.offset}")
+    println("  Key: \{msg.key.to_string()}")
+    println("  Value: \{msg.value.to_string()}")
+    println("  Timestamp: \{msg.timestamp}")
+    println("")
+    i = i + 1
+  }
+
+  // Close partition consumer
+  partition_consumer.close()
+
+  // Close consumer
+  match @consumer.consumer_close(consumer) {
+    Ok(_) => println("Consumer closed successfully")
+    Err(e) => println("Failed to close consumer: \{e}")
+  }
+}

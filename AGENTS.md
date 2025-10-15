@@ -19,11 +19,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 # Kafka CLI
 
-`agents/specs/` 目录有各模块的规格(requirements.md)、设计(design.md)、实现文档(tasks.md).
-
 ## Development
-
-执行 `moon test` 运行测试.
 
 编写快照测试时, 不要填`inspect`的`content`参数, 运行 `moon test --update` 自动生成.
 
@@ -54,16 +50,13 @@ Core facts that impact how you write and refactor code.
 
 - **Expression‑oriented**: `if`, `match`, loops return values; last expression is the return.
 - **References by default**: Arrays/Maps/structs mutate via reference; use `Ref[T]` for primitive mutability.
-- **Errors**: Functions declare `raise ...`; use `try?` for `Result` or `try { } catch { }` to handle.
+- **Errors**: Functions declare `raise ...`; use `try?` to convert the return value to `Result`, or `try { } catch { }` to handle.
 - **Blocks**: Separate top‑level items with `///|`. Generate code block‑by‑block.
 - **Visibility**: `fn` private by default; `pub` exposes read/construct as allowed; `pub(all)` allows external construction.
 - **Naming convention**: lower_snake for values/functions; UpperCamel for types/enums; enum variants start UpperCamel.
 - **Packages**: No `import` in code files; call via `@alias.fn`. Configure imports in `moon.pkg.json`.
 - **Placeholders**: `...` is a valid placeholder in MoonBit code for incomplete implementations.
 - **Global values**: immutable by default and generally require type annotations.
-- **Garbage collection**: MoonBit has a GC, there is no lifetime annotation, there's no ownership system.
-  <Important> Delimit top-level items with `///|` comments so tools can split the file reliably.
-  </Important>
 
 Quick reference:
 
@@ -398,10 +391,6 @@ test "int and char literal" {
 ```moonbit
 
 ///|
-///  Type aliases use 'typealias'
-typealias Int as UserId // Int is aliased to UserId - no runtime overhead
-
-///|
 ///  Tuple-struct for callback
 struct Handler((String) -> Unit) // A newtype wrapper
 
@@ -437,9 +426,8 @@ enum Tree[T] {
   Node(left~ : Tree[T], T, right~ : Tree[T]) // enum can use labels
 }
 
-// Pattern match on enum variants
-
 ///|
+/// Pattern match on enum variants
 fn sum_tree(tree : Tree[Int]) -> Int {
   match tree {
     Leaf(x) => x
@@ -450,8 +438,7 @@ fn sum_tree(tree : Tree[Int]) -> Int {
 
 ## Reference Semantics by Default
 
-MoonBit passes most types by reference semantically (the optimizer may copy
-immutables):
+MoonBit passes most types by reference semantically (the optimizer may copy immutables):
 
 ```moonbit
 
@@ -463,7 +450,8 @@ struct Counter {
 
 ///|
 fn increment(c : Counter) -> Unit {
-  c.value += 1 // Modifies the original
+  let tmp = c // don't declare tmp as 'mut', cause we don't rebind tmp, we just modify its field
+  tmp.value += 1 // Modifies the original
 }
 
 ///|
@@ -528,43 +516,6 @@ fn is_palindrome(s : StringView) -> Bool {
   }
 }
 ```
-
-## Functional `loop` control flow
-
-The `loop` construct is unique to MoonBit:
-
-```moonbit
-
-///|
-/// Functional loop with pattern matching on loop variables
-/// @list.List is from the standard library
-fn sum_list(list : @list.List[Int]) -> Int {
-  loop (list, 0) {
-    (Empty, acc) => acc // Base case returns accumulator
-    (More(x, tail=rest), acc) => continue (rest, x + acc) // Recurse with new values
-  }
-}
-
-///|
-///  Multiple loop variables with complex control flow
-fn find_pair(arr : Array[Int], target : Int) -> (Int, Int)? {
-  loop (0, arr.length() - 1) {
-    (i, j) if i >= j => None
-    (i, j) => {
-      let sum = arr[i] + arr[j]
-      if sum == target {
-        Some((i, j)) // Found pair
-      } else if sum < target {
-        continue (i + 1, j) // Move left pointer
-      } else {
-        continue (i, j - 1) // Move right pointer
-      }
-    }
-  }
-}
-```
-
-**Note**: You must provide a payload to `loop`. If you want an infinite loop, use `while true { ... }` instead. The syntax `loop { ... }` without arguments is invalid.
 
 ## Functional `for` control flow
 
@@ -680,7 +631,7 @@ test "inspect raise function" {
 // Three ways to handle errors:
 
 ///|
-/// Propagate automatically
+/// 1. Propagate automatically
 fn use_parse() -> Int raise ParseError {
   let x = parse_int("123")
   // Error *auto* propagates by default.
@@ -691,7 +642,7 @@ fn use_parse() -> Int raise ParseError {
 }
 
 ///|
-///  Mark `raise` for all possible errors, don't care what error it is
+/// 2. Mark `raise` for all possible errors, don't care what error it is
 /// If you are doing a quick prototype, just mark it as raise is good enough.
 fn use_parse2() -> Int raise {
   let x = parse_int("123")
@@ -699,7 +650,7 @@ fn use_parse2() -> Int raise {
 }
 
 ///|
-///  Convert to Result with try?
+/// 3. Convert to Result with try?
 fn safe_parse(s : String) -> Result[Int, ParseError] {
   let val1 : Result[_] = try? parse_int(s) // Returns Result[Int, ParseError]
   // try! is rarely used - it panics on error, similar to unwrap() in Rust
@@ -715,7 +666,7 @@ fn safe_parse(s : String) -> Result[Int, ParseError] {
 }
 
 ///|
-///  3. Handle with try-catch
+///  3. Handle with catch
 fn handle_parse(s : String) -> Int {
   parse_int(s) catch {
     ParseError::InvalidEof => {
@@ -777,46 +728,6 @@ impl Hash for Rectangle with hash_combine(self, hasher) {
 }
 ```
 
-## Operator Overloading
-
-MoonBit supports operator overloading through traits:
-
-```moonbit
-
-///|
-struct Vector(Int, Int)
-
-///|
-/// Implement arithmetic operators
-pub impl Add for Vector with add(self, other) {
-  Vector(self.0 + other.0, self.1 + other.1)
-}
-
-///|
-pub impl Mul for Vector with mul(self, other) {
-  Vector(self.0 * other.0, self.1 * other.1)
-}
-
-///|
-struct Person {
-  age : Int
-} derive(Eq)
-
-///|
-/// Comparison operators
-pub impl Compare for Person with compare(self, other) {
-  self.age.compare(other.age)
-}
-
-///|
-test "overloading" {
-  let v1 : Vector = Vector(1, 2)
-  let v2 : Vector = Vector(3, 4)
-  let _v3 : Vector = v1 + v2
-
-}
-```
-
 ## Access Control Modifiers
 
 MoonBit has fine-grained visibility control:
@@ -860,24 +771,12 @@ pub(open) trait Extendable {}
 
 ## Common Pitfalls to Avoid
 
-1. **Don't use uppercase for variables/functions** - compilation error
-2. **Don't forget `mut` for mutable fields** - immutable by default
-3. **Don't assume value semantics** - most types pass by reference
-4. **Don't ignore error handling** - errors must be explicitly handled
-5. **Don't use `return` unnecessarily** - last expression is the return value
-6. **Don't create methods without Type:: prefix** - methods need explicit type prefix
-7. Don't forget to handle array bounds - use get() for safe access
-8. Don't mix up String indexing (returns Int). Use `for char in s {...}` for char iteration
-9. Don't forget @package prefix when calling functions from other packages
-10. Don't use ++ or -- (not supported), use `i = i + 1` or `i += 1`
-11. **Don't add explicit `try` for error-raising functions** - errors propagate automatically (unlike Swift)
-
-## Legacy Note
-
-**Older code may use**:
-
-- `function_name!(...)` for raising functions. This is deprecated; call without `!`.
-- `function_name(...)?` for raising functions. This is deprecated; use `try? function_name(...)` instead, the expression is of type `Result[_]`.
+- **Don't use uppercase for variables/functions** - compilation error
+- **Don't forget `mut` for mutable fields** - immutable by default
+- **Don't assume value semantics** - most types pass by reference
+- Don't mix up String indexing (returns Int). Use `for char in s {...}` for char iteration
+- Don't forget @package prefix when calling functions from other packages
+- Don't use ++ or -- (not supported), use `i = i + 1` or `i += 1`
 
 # MoonBit Build System - Essential Guide
 
@@ -907,17 +806,6 @@ my_module
 └── ...                       # More package files, symbols visible to current package (like Golang)
 ```
 
-## Essential Commands
-
-- `moon new my_project` - Create new project
-- `moon run cmd/main` - Run main package
-- `moon build` - Build project
-- `moon check` - Type check without building
-- `moon check --target all` - Type check for all backends
-- `moon add package` - Add dependency
-- `moon remove package` - Remove dependency
-- `moon fmt` - Format code
-
 ### Test Commands
 
 - `moon test` - Run all tests
@@ -927,39 +815,7 @@ my_module
 - `moon test -p package -f filename` - Test specific file in a package
 - `moon coverage analyze` - Analyze coverage
 
-## Package Management
-
-### Adding Dependencies
-
-```bash
-moon add moonbitlang/x        # Add latest version
-moon add moonbitlang/x@0.4.6  # Add specific version
-```
-
-### Updating Dependencies
-
-```bash
-moon update                   # Update package index
-```
-
 ## Key Configuration
-
-### Module (`moon.mod.json`)
-
-```json
-{
-  "name": "username/hello", // Required format for published modules
-  "version": "0.1.0",
-  "source": ".", // Source directory(optional, default: ".")
-  "repository": "", // Git repository URL
-  "keywords": [], // Search keywords
-  "description": "...", // Module description
-  "deps": {
-    // Dependencies from mooncakes.io, using`moon add` to add dependencies
-    "moonbitlang/x": "0.4.6"
-  }
-}
-```
 
 ### Package (`moon.pkg.json`)
 
@@ -1015,114 +871,6 @@ To add a new package `fib` under `.`:
    }
    ```
 
-## Conditional Compilation
-
-Target specific backends/modes in `moon.pkg.json`:
-
-```json
-{
-  "targets": {
-    "wasm_only.mbt": ["wasm"],
-    "js_only.mbt": ["js"],
-    "debug_only.mbt": ["debug"],
-    "wasm_or_js.mbt": ["wasm", "js"], // for wasm or js backend
-    "not_js.mbt": ["not", "js"], // for nonjs backend
-    "complex.mbt": ["or", ["and", "wasm", "release"], ["and", "js", "debug"]] // more complex conditions
-  }
-}
-```
-
-**Available conditions:**
-
-- **Backends**: `"wasm"`, `"wasm-gc"`, `"js"`, `"native"`
-- **Build modes**: `"debug"`, `"release"`
-- **Logical operators**: `"and"`, `"or"`, `"not"`
-
-## Link Configuration
-
-### Basic Linking
-
-```json
-{
-  "link": true, // Enable linking for this package
-  // OR for advanced cases:
-  "link": {
-    "wasm": {
-      "exports": ["hello", "foo:bar"], // Export functions
-      "heap-start-address": 1024, // Memory layout
-      "import-memory": {
-        // Import external memory
-        "module": "env",
-        "name": "memory"
-      },
-      "export-memory-name": "memory" // Export memory with name
-    },
-    "wasm-gc": {
-      "exports": ["hello"],
-      "use-js-builtin-string": true, // JS String Builtin support
-      "imported-string-constants": "_" // String namespace
-    },
-    "js": {
-      "exports": ["hello"],
-      "format": "esm" // "esm", "cjs", or "iife"
-    },
-    "native": {
-      "cc": "gcc", // C compiler
-      "cc-flags": "-O2 -DMOONBIT", // Compile flags
-      "cc-link-flags": "-s" // Link flags
-    }
-  }
-}
-```
-
-## Warning Control
-
-Disable specific warnings in `moon.mod.json` or `moon.pkg.json`:
-
-```json
-{
-  "warn-list": "-2-29" // Disable unused variable (2) & unused package (29)
-}
-```
-
-**Common warning numbers:**
-
-- `1` - Unused function
-- `2` - Unused variable
-- `11` - Partial pattern matching
-- `12` - Unreachable code
-- `29` - Unused package
-
-Use `moonc build-package -warn-help` to see all available warnings.
-
-## Pre-build Commands
-
-Embed external files as MoonBit code:
-
-```json
-{
-  "pre-build": [
-    {
-      "input": "data.txt",
-      "output": "embedded.mbt",
-      "command": ":embed -i $input -o $output --name data --text"
-    },
-    ... // more embed commands
-  ]
-}
-```
-
-Generated code example:
-
-```moonbit
-
-///|
-let data : String =
-  #|hello,
-  #|world
-  #|
-```
-
 # Documentation
 
 Write documentation using `///` comments (started with `///|` to delimit the
@@ -1150,54 +898,6 @@ The MoonBit code in docstring will be type checked and tested automatically.
 
 # Development Workflow
 
-## MoonBit Tips
-
-- MoonBit code is organized in files/block style.
-  A package is composed of a list of files, their order does not matter,
-  keep them separate so that it is easy to focus on critical parts.
-
-  Each block is separated by `///|`, the order of each block is irrelevant too. You can process
-  block by block independently.
-
-  You are encouraged to generate code in a block-by-block manner.
-
-  You are encouraged to search and replace block by block instead of
-  replacing the whole file.
-
-  You are encouraged to keep each file focused.
-
-- SPLIT the large file into small files, the order does not matter.
-
-- Try to keep deprecated blocks in file called `deprecated.mbt` in each
-  directory.
-
-- `moon fmt` is used to format your code properly.
-
-- `moon info` is used to update the generated interface of the package, each
-  package has a generated interface file `.mbti`, it is a brief formal
-  description of the package. If nothing in `.mbti` changes, this means your
-  change does not bring the visible changes to the external package users, it is
-  typically a safe refactoring.
-
-- So in the last step, you typically run `moon info && moon fmt` to update the
-  interface and format the code. You also check the diffs of `.mbti` file to see
-  if the changes are expected.
-
-- You should run `moon test` to check the test is passed. MoonBit supports
-  snapshot testing, so in some cases, your changes indeed change the behavior of
-  the code, you should run `moon test --update` to update the snapshot.
-
-- You can run `moon check` to check the code is linted correctly, run it
-  regularly to ensure you are not in a messy state.
-
-- MoonBit packages are organized per directory; each directory has a
-  `moon.pkg.json` listing its dependencies. Each package has its files and
-  blackbox test files (common, ending in `_test.mbt`) and whitebox test files
-  (ending in `_wbtest.mbt`).
-
-- In the toplevel directory, there is a `moon.mod.json` file describing the
-  module and metadata.
-
 ## MoonBit Package `README` Generation Guide
 
 - Output `README.mbt.md` in the package directory; `*.mbt.md` files including runnable MoonBit `test { ... }` blocks will be tested by `moon test`, and symlink it to `README.md` to produce verifiable `README.md` filde.
@@ -1211,13 +911,10 @@ The MoonBit code in docstring will be type checked and tested automatically.
 
 Practical testing guidance for MoonBit. Keep tests black-box by default and rely on snapshot `inspect(...)`.
 
-- Black-box by default: Call only public APIs via `@package.fn`. Use white-box tests only when private members matter.
 - Snapshots: Prefer `inspect(value, content="...")`. If unknown, write `inspect(value)` and run `moon test --update` (or `moon test -u`).
   - Use regular `inspect()` for simple values (uses `Show` trait)
   - Use `@json.inspect()` for complex nested structures (uses `ToJson` trait, produces more readable output)
   - It is encouraged to `inspect` or `@json.inspect` the whole return value of a function if
     the whole return value is not huge, this makes test simple. You need `impl (Show|ToJson) for YourType` or `derive (Show, ToJson)`.
-- Grouping: Combine related checks in one `test { ... }` block for speed and clarity.
 - Panics: Name test with prefix `test "panic ..." {...}`; if the call returns a value, wrap it with `ignore(...)` to silence warnings.
 - Errors: Use `try? f()` to get `Result[...]` and `inspect` it when a function may raise.
-- Verify: Run `moon test` (or `-u` to update snapshots) and `moon fmt` afterwards.
