@@ -5,11 +5,6 @@ trait Encoder {
   encode(Self, &PacketEncoder) -> Unit raise
 }
 
-///|
-trait EncoderWithHeader: Encoder {
-  header_version(Self) -> Int16
-}
-
 // Encode takes an Encoder and turns it into bytes while potentially recording metrics.
 
 ///|
@@ -38,10 +33,9 @@ pub trait VersionedDecoder {
   decode(Self, &PacketDecoder, version : Int16) -> Unit raise PacketDecodingError
 }
 
-// decode takes bytes and a decoder and fills the fields of the decoder from the bytes,
-// interpreted using Kafka's encoding rules.
-
 ///|
+/// decode takes bytes and a decoder and fills the fields of the decoder from the bytes,
+/// interpreted using Kafka's encoding rules.
 pub fn[T] decode(
   bytes : BytesView,
   decode : (&PacketDecoder) -> T raise PacketDecodingError,

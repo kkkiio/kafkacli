@@ -14,7 +14,7 @@ pub(all) struct PartitionMetadata {
   mut replicas : Array[Int]
   mut isr : Array[Int]
   mut offline_replicas : Array[Int]
-} derive(Show, ToJson,Eq)
+} derive(Show, ToJson, Eq)
 
 ///|
 /// Encode partition metadata to packet encoder
@@ -242,7 +242,7 @@ pub(all) struct MetadataResponse {
 
 ///|
 /// Get API key for metadata response
-pub impl ProtocolBody for MetadataResponse with key(self) {
+pub impl ProtocolBody for MetadataResponse with key(_) {
   ApiKeyMetadata
 }
 

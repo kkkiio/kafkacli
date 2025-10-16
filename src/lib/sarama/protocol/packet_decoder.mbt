@@ -70,6 +70,6 @@ pub trait PushDecoder {
 }
 
 ///|
-impl PushDecoder with get_dynamic_decoder(self) {
+impl PushDecoder with get_dynamic_decoder(_) {
   None
 }

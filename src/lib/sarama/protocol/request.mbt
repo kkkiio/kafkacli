@@ -73,7 +73,8 @@ pub async fn decode_request(
 pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
   let body : ProtocolBodyAdapter = match key {
     // apiKeyProduce => ProduceRequest::new(version)
-    // apiKeyFetch => FetchRequest::new(version)
+    ApiKeyFetch =>
+      Fetch(FetchRequest::with_version(version))
     // apiKeyListOffsets => OffsetRequest::new(version)
     ApiKeyMetadata =>
       Metadata(MetadataRequest::{
@@ -162,6 +163,7 @@ pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
 pub enum ProtocolBodyAdapter {
   ApiVersions(ApiVersionsRequest)
   Metadata(MetadataRequest)
+  Fetch(FetchRequest)
 } derive(Show, ToJson)
 
 ///|
@@ -169,6 +171,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with key(self) {
   match self {
     ApiVersions(body) => body.key()
     Metadata(body) => body.key()
+    Fetch(body) => body.key()
   }
 }
 
@@ -177,6 +180,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with version(self) {
   match self {
     ApiVersions(body) => body.version()
     Metadata(body) => body.version()
+    Fetch(body) => body.version()
   }
 }
 
@@ -185,6 +189,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with set_version(self, version) {
   match self {
     ApiVersions(body) => body.set_version(version)
     Metadata(body) => body.set_version(version)
+    Fetch(body) => body.set_version(version)
   }
 }
 
@@ -193,6 +198,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with header_version(self) {
   match self {
     ApiVersions(body) => body.header_version()
     Metadata(body) => body.header_version()
+    Fetch(body) => body.header_version()
   }
 }
 
@@ -201,6 +207,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with is_valid_version(self) {
   match self {
     ApiVersions(body) => body.is_valid_version()
     Metadata(body) => body.is_valid_version()
+    Fetch(body) => body.is_valid_version()
   }
 }
 
@@ -209,6 +216,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with required_version(self) {
   match self {
     ApiVersions(body) => body.required_version()
     Metadata(body) => body.required_version()
+    Fetch(body) => body.required_version()
   }
 }
 
@@ -217,6 +225,7 @@ pub impl VersionedDecoder for ProtocolBodyAdapter with decode(self, pd, version)
   match self {
     ApiVersions(body) => body.decode(pd, version)
     Metadata(body) => body.decode(pd, version)
+    Fetch(body) => body.decode(pd, version)
   }
 }
 
@@ -225,5 +234,6 @@ pub impl Encoder for ProtocolBodyAdapter with encode(self, pe) {
   match self {
     ApiVersions(body) => body.encode(pe)
     Metadata(body) => body.encode(pe)
+    Fetch(body) => body.encode(pe)
   }
 }

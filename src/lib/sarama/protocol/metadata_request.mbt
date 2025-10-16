@@ -169,7 +169,7 @@ pub impl VersionedDecoder for MetadataRequest with decode(self, pd, version) {
 
 ///|
 /// Get API key for metadata request
-pub impl ProtocolBody for MetadataRequest with key(self) {
+pub impl ProtocolBody for MetadataRequest with key(_) {
   ApiKeyMetadata
 }
 
