@@ -58,7 +58,7 @@ pub impl ProtocolBody for ApiVersionsRequest with set_version(self, version) {
 }
 
 ///|
-pub impl ProtocolBody for ApiVersionsRequest with header_version(self) {
+pub impl EncoderWithHeader for ApiVersionsRequest with header_version(self) {
   if self.version >= 3 {
     return 2
   }

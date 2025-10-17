@@ -1,9 +1,8 @@
 ///|
-pub trait ProtocolBody: Encoder + VersionedDecoder + ToJson {
+pub trait ProtocolBody: EncoderWithHeader + VersionedDecoder + ToJson {
   key(Self) -> Int16
   version(Self) -> Int16
   set_version(Self, Int16) -> Unit
-  header_version(Self) -> Int16
   is_valid_version(Self) -> Bool
   required_version(Self) -> KafkaVersion
 }
@@ -193,7 +192,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with set_version(self, version) {
 }
 
 ///|
-pub impl ProtocolBody for ProtocolBodyAdapter with header_version(self) {
+pub impl EncoderWithHeader for ProtocolBodyAdapter with header_version(self) {
   match self {
     ApiVersions(body) => body.header_version()
     Metadata(body) => body.header_version()

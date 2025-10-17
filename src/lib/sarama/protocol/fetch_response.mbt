@@ -316,7 +316,7 @@ pub impl ProtocolBody for FetchResponse with set_version(self, version) {
 
 ///|
 /// Get header version based on response version
-pub impl ProtocolBody for FetchResponse with header_version(self) {
+pub impl EncoderWithHeader for FetchResponse with header_version(self) {
   0 // Fetch response always uses header version 0
 }
 

@@ -38,6 +38,9 @@ pub fn restrictApiVersion(
   )
 }
 
+/// https://kafka.apache.org/protocol#protocol_api_keys
+/// The following are the numeric codes that the stable ApiKey in the request can take for each of the below request types.
+
 ///|
 const ApiKeyProduce : Int16 = 0
 

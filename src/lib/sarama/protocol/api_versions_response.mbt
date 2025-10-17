@@ -111,7 +111,7 @@ pub impl ProtocolBody for ApiVersionsResponse with version(self) {
 }
 
 ///|
-pub impl ProtocolBody for ApiVersionsResponse with header_version(self) {
+pub impl EncoderWithHeader for ApiVersionsResponse with header_version(self) {
   // ApiVersionsResponse always includes a v0 header.
   // See KIP-511 for details
   return 0

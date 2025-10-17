@@ -1,13 +1,17 @@
 ///|
 // Encoder is the interface that wraps the basic Encode method.
 // Anything implementing Encoder can be turned into bytes using Kafka's encoding rules.
-trait Encoder {
+pub(open) trait Encoder {
   encode(Self, &PacketEncoder) -> Unit raise
 }
 
-// Encode takes an Encoder and turns it into bytes while potentially recording metrics.
+///|
+pub(open) trait EncoderWithHeader: Encoder {
+  header_version(Self) -> Int16
+}
 
 ///|
+/// Encode takes an Encoder and turns it into bytes while potentially recording metrics.
 pub fn encode(e : &Encoder) -> Bytes raise {
   let prepEnc = PrepEncoder::new()
   e.encode(prepEnc)
@@ -20,10 +24,9 @@ pub fn encode(e : &Encoder) -> Bytes raise {
   Bytes::from_array(raw)
 }
 
-// decoder is the interface that wraps the basic Decode method.
-// Anything implementing Decoder can be extracted from bytes using Kafka's encoding rules.
-
 ///|
+/// decoder is the interface that wraps the basic Decode method.
+/// Anything implementing Decoder can be extracted from bytes using Kafka's encoding rules.
 pub trait Decoder {
   decode(Self, &PacketDecoder) -> Unit raise PacketDecodingError
 }

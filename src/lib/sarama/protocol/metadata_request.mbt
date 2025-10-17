@@ -187,7 +187,7 @@ pub impl ProtocolBody for MetadataRequest with set_version(self, version) {
 
 ///|
 /// Get header version based on request version
-pub impl ProtocolBody for MetadataRequest with header_version(self) {
+pub impl EncoderWithHeader for MetadataRequest with header_version(self) {
   if self.version >= 9 {
     2
   } else {

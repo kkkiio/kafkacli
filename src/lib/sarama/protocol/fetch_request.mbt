@@ -285,7 +285,7 @@ pub impl ProtocolBody for FetchRequest with set_version(self, version) {
 
 ///|
 /// Get header version based on request version
-pub impl ProtocolBody for FetchRequest with header_version(self) {
+pub impl EncoderWithHeader for FetchRequest with header_version(self) {
   1 // Fetch request always uses header version 1
 }
 

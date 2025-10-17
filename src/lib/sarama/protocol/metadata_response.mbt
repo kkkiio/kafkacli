@@ -260,7 +260,7 @@ pub impl ProtocolBody for MetadataResponse with set_version(self, version) {
 
 ///|
 /// Get header version based on response version
-pub impl ProtocolBody for MetadataResponse with header_version(self) {
+pub impl EncoderWithHeader for MetadataResponse with header_version(self) {
   if self.version >= 9 {
     1
   } else {
