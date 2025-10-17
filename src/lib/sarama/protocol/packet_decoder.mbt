@@ -4,9 +4,9 @@
 // not about how a string is represented in Kafka.
 pub trait PacketDecoder {
   // Primitives
-  get_int8(Self) -> Byte raise PacketDecodingError
+  get_byte(Self) -> Byte raise PacketDecodingError
   get_int16(Self) -> Int16 raise PacketDecodingError
-  get_int32(Self) -> Int raise PacketDecodingError
+  get_int(Self) -> Int raise PacketDecodingError
   get_int64(Self) -> Int64 raise PacketDecodingError
   get_varint(Self) -> Int64 raise PacketDecodingError
   get_uvarint(Self) -> UInt64 raise PacketDecodingError
@@ -25,8 +25,8 @@ pub trait PacketDecoder {
   get_nullable_string(Self) -> String? raise PacketDecodingError
   get_compact_string(Self) -> String raise PacketDecodingError
   get_compact_nullable_string(Self) -> String? raise PacketDecodingError
-  get_compact_int32_array(Self) -> Array[Int] raise PacketDecodingError
-  get_int32_array(Self) -> Array[Int] raise PacketDecodingError
+  get_compact_int_array(Self) -> Array[Int] raise PacketDecodingError
+  get_int_array(Self) -> Array[Int] raise PacketDecodingError
   get_int64_array(Self) -> Array[Int64] raise PacketDecodingError
   get_string_array(Self) -> Array[String] raise PacketDecodingError
 
@@ -34,7 +34,7 @@ pub trait PacketDecoder {
   remaining(Self) -> Int
   get_subset(Self, length : Int) -> &PacketDecoder raise PacketDecodingError
   peek(Self, offset : Int, length : Int) -> &PacketDecoder raise PacketDecodingError // similar to getSubset, but it doesn't advance the offset
-  peek_int8(Self, offset : Int) -> Byte raise PacketDecodingError // similar to peek, but just one byte
+  peek_byte(Self, offset : Int) -> Byte raise PacketDecodingError // similar to peek, but just one byte
 
   // Stacks, see PushDecoder
   push(Self, in_ : &PushDecoder) -> Unit raise

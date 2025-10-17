@@ -21,7 +21,7 @@ pub impl[T : ProtocolBody] Encoder for Request[T] with encode(self, pe) {
   let body = self.body
   pe.put_int16(body.key())
   pe.put_int16(body.version())
-  pe.put_int32(self.correlation_id)
+  pe.put_int(self.correlation_id)
   if body.header_version() >= 1 {
     pe.put_string(self.client_id)
   }
@@ -39,7 +39,7 @@ pub fn Request::decode(
 ) -> Request[ProtocolBodyAdapter] raise PacketDecodingError {
   let key = pd.get_int16()
   let version = pd.get_int16()
-  let correlation_id = pd.get_int32()
+  let correlation_id = pd.get_int()
   let client_id = pd.get_string()
   guard allocate_body(key, version) is Some(body) else {
     raise PacketDecodingError("unknown request key (\{key})")
@@ -73,8 +73,7 @@ pub async fn decode_request(
 pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
   let body : ProtocolBodyAdapter = match key {
     // apiKeyProduce => ProduceRequest::new(version)
-    ApiKeyFetch =>
-      Fetch(FetchRequest::with_version(version))
+    ApiKeyFetch => Fetch(FetchRequest::with_version(version))
     // apiKeyListOffsets => OffsetRequest::new(version)
     ApiKeyMetadata =>
       Metadata(MetadataRequest::{

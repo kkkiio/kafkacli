@@ -7,14 +7,19 @@ pub struct AbortedTransaction {
 
 ///|
 /// Encode aborted transaction to packet encoder
-pub fn AbortedTransaction::encode(self : AbortedTransaction, pe : &PacketEncoder) -> Unit {
+pub fn AbortedTransaction::encode(
+  self : AbortedTransaction,
+  pe : &PacketEncoder,
+) -> Unit {
   pe.put_int64(self.producer_id)
   pe.put_int64(self.first_offset)
 }
 
 ///|
 /// Decode aborted transaction from packet decoder
-pub fn AbortedTransaction::decode(pd : &PacketDecoder) -> AbortedTransaction raise PacketDecodingError {
+pub fn AbortedTransaction::decode(
+  pd : &PacketDecoder,
+) -> AbortedTransaction raise PacketDecodingError {
   let producer_id = pd.get_int64()
   let first_offset = pd.get_int64()
   { producer_id, first_offset }
@@ -50,7 +55,10 @@ pub fn FetchResponseBlock::new() -> FetchResponseBlock {
 
 ///|
 /// Encode fetch response block to packet encoder
-pub fn FetchResponseBlock::encode(self : FetchResponseBlock, pe : &PacketEncoder) -> Unit raise {
+pub fn FetchResponseBlock::encode(
+  self : FetchResponseBlock,
+  pe : &PacketEncoder,
+) -> Unit raise {
   pe.put_int16(self.error)
   pe.put_int64(self.high_watermark_offset)
   if self.version >= 4 {
@@ -64,11 +72,11 @@ pub fn FetchResponseBlock::encode(self : FetchResponseBlock, pe : &PacketEncoder
     }
   }
   if self.version >= 11 {
-    pe.put_int32(self.preferred_read_replica)
+    pe.put_int(self.preferred_read_replica)
   }
 
   // Records length and records data
-  pe.put_int32(self.records.length())
+  pe.put_int(self.records.length())
   pe.put_raw_bytes(self.records)
 }
 
@@ -81,7 +89,8 @@ pub fn FetchResponseBlock::decode(
 ) -> Self raise PacketDecodingError {
   let error = pd.get_int16()
   let high_watermark_offset = pd.get_int64()
-  let (last_stable_offset, log_start_offset, aborted_transactions) = if version >= 4 {
+  let (last_stable_offset, log_start_offset, aborted_transactions) = if version >=
+    4 {
     let last_stable = pd.get_int64()
     let log_start = if version >= 5 { pd.get_int64() } else { 0 }
     let aborted_count = pd.get_array_length()
@@ -98,26 +107,24 @@ pub fn FetchResponseBlock::decode(
   } else {
     (0, 0, [])
   }
-
-  let preferred_read_replica = if version >= 11 { pd.get_int32() } else { -1 }
+  let preferred_read_replica = if version >= 11 { pd.get_int() } else { -1 }
 
   // Read records
-  let records_size = pd.get_int32()
+  let records_size = pd.get_int()
   let records = if records_size > 0 {
     pd.get_raw_bytes(records_size).to_bytes()
   } else {
     []
   }
-
   {
-    version: version,
-    error: error,
-    high_watermark_offset: high_watermark_offset,
-    last_stable_offset: last_stable_offset,
-    log_start_offset: log_start_offset,
-    aborted_transactions: aborted_transactions,
-    preferred_read_replica: preferred_read_replica,
-    records: records,
+    version,
+    error,
+    high_watermark_offset,
+    last_stable_offset,
+    log_start_offset,
+    aborted_transactions,
+    preferred_read_replica,
+    records,
   }
 }
 
@@ -179,7 +186,7 @@ pub fn FetchResponse::add_error(
     let block = FetchResponseBlock::new()
     let updated_block = {
       version: self.version,
-      error: error,
+      error,
       high_watermark_offset: block.high_watermark_offset,
       last_stable_offset: block.last_stable_offset,
       log_start_offset: block.log_start_offset,
@@ -192,7 +199,7 @@ pub fn FetchResponse::add_error(
     let block = self.blocks[topic][partition]
     let updated_block = {
       version: block.version,
-      error: error,
+      error,
       high_watermark_offset: block.high_watermark_offset,
       last_stable_offset: block.last_stable_offset,
       log_start_offset: block.log_start_offset,
@@ -239,11 +246,11 @@ pub impl Encoder for FetchResponse with encode(self, pe) {
     )
   }
   if self.version >= 1 {
-    pe.put_int32(self.throttle_time_ms)
+    pe.put_int(self.throttle_time_ms)
   }
   if self.version >= 7 {
     pe.put_int16(self.error_code)
-    pe.put_int32(self.session_id)
+    pe.put_int(self.session_id)
   }
 
   // Encode blocks
@@ -252,7 +259,7 @@ pub impl Encoder for FetchResponse with encode(self, pe) {
     pe.put_string(topic)
     pe.put_array_length(partitions.length())
     for partition_id, block in partitions {
-      pe.put_int32(partition_id)
+      pe.put_int(partition_id)
       block.encode(pe)
     }
   }
@@ -263,11 +270,11 @@ pub impl Encoder for FetchResponse with encode(self, pe) {
 pub impl VersionedDecoder for FetchResponse with decode(self, pd, version) raise PacketDecodingError {
   self.version = version
   if version >= 1 {
-    self.throttle_time_ms = pd.get_int32()
+    self.throttle_time_ms = pd.get_int()
   }
   if version >= 7 {
     self.error_code = pd.get_int16()
-    self.session_id = pd.get_int32()
+    self.session_id = pd.get_int()
   }
 
   // Decode blocks
@@ -279,7 +286,7 @@ pub impl VersionedDecoder for FetchResponse with decode(self, pd, version) raise
       let partition_count = pd.get_array_length()
       let partitions = Map::new()
       for _ in 0..<partition_count {
-        let partition_id = pd.get_int32()
+        let partition_id = pd.get_int()
         let block = FetchResponseBlock::new()
         let decoded_block = block.decode(pd, version)
         partitions[partition_id] = decoded_block

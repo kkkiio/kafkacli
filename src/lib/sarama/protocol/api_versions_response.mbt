@@ -70,7 +70,7 @@ pub impl Encoder for ApiVersionsResponse with encode(self, pe) {
     block.encode(pe, self.version)
   }
   if self.version >= 1 {
-    pe.put_int32(self.throttle_time_ms)
+    pe.put_int(self.throttle_time_ms)
   }
   if self.version >= 3 {
     pe.put_empty_tagged_field_array()
@@ -93,7 +93,7 @@ pub impl VersionedDecoder for ApiVersionsResponse with decode(self, pd, version)
     self.api_keys.push(block)
   }
   if self.version >= 1 {
-    self.throttle_time_ms = pd.get_int32()
+    self.throttle_time_ms = pd.get_int()
   }
   if self.version >= 3 {
     pd.get_empty_tagged_field_array() |> ignore

@@ -3,11 +3,11 @@
 struct LengthField {
   mut start_offset : Int
   mut length : Int
-}derive(Default)
+} derive(Default)
 
 ///|
 pub impl Decoder for LengthField with decode(self, pd) {
-  self.length = pd.get_int32()
+  self.length = pd.get_int()
   if self.length > pd.remaining() {
     raise PacketDecodingError("insufficient data")
   }
@@ -113,6 +113,11 @@ pub impl PushEncoder for VarintLengthField with reserve_length(self) {
 ///|
 pub impl PushDecoder for VarintLengthField with reserve_length(self) {
   self.reserve_length()
+}
+
+///|
+pub impl PushDecoder for VarintLengthField with get_dynamic_decoder(self) {
+  Some(self)
 }
 
 ///|

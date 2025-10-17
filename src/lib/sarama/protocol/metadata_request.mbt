@@ -84,7 +84,7 @@ pub impl Encoder for MetadataRequest with encode(self, pe) {
     }
     // No topics requested - encode null array
   } else if self.version < 9 {
-    pe.put_int32(-1)
+    pe.put_int(-1)
   } else {
     pe.put_compact_array_length(-1)
   }
@@ -114,7 +114,7 @@ pub impl VersionedDecoder for MetadataRequest with decode(self, pd, version) {
   // Decode topics array based on version
   if self.version < 9 {
     // Versions 0-8: regular array decoding
-    let size = pd.get_int32()
+    let size = pd.get_int()
     if size > 0 {
       self.topics = Array::new(capacity=size)
       for _ in 0..<size {

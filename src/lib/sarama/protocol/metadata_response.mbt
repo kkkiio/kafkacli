@@ -20,34 +20,34 @@ pub(all) struct PartitionMetadata {
 /// Encode partition metadata to packet encoder
 pub impl Encoder for PartitionMetadata with encode(self, pe) {
   pe.put_int16(self.err.int_value())
-  pe.put_int32(self.id)
-  pe.put_int32(self.leader)
+  pe.put_int(self.id)
+  pe.put_int(self.leader)
 
   // Encode leader epoch for versions 7+
   if self.version >= 7 {
-    pe.put_int32(self.leader_epoch)
+    pe.put_int(self.leader_epoch)
   }
 
   // Encode replicas array
   if self.version < 9 {
-    pe.put_int32_array(self.replicas)
+    pe.put_int_array(self.replicas)
   } else {
-    pe.put_compact_int32_array(self.replicas)
+    pe.put_compact_int_array(self.replicas)
   }
 
   // Encode ISR array
   if self.version < 9 {
-    pe.put_int32_array(self.isr)
+    pe.put_int_array(self.isr)
   } else {
-    pe.put_compact_int32_array(self.isr)
+    pe.put_compact_int_array(self.isr)
   }
 
   // Encode offline replicas for versions 5+
   if self.version >= 5 {
     if self.version < 9 {
-      pe.put_int32_array(self.offline_replicas)
+      pe.put_int_array(self.offline_replicas)
     } else {
-      pe.put_compact_int32_array(self.offline_replicas)
+      pe.put_compact_int_array(self.offline_replicas)
     }
   }
 
@@ -62,34 +62,34 @@ pub impl Encoder for PartitionMetadata with encode(self, pe) {
 pub impl VersionedDecoder for PartitionMetadata with decode(self, pd, version) {
   self.version = version
   self.err = KError(pd.get_int16())
-  self.id = pd.get_int32()
-  self.leader = pd.get_int32()
+  self.id = pd.get_int()
+  self.leader = pd.get_int()
 
   // Decode leader epoch for versions 7+
   if self.version >= 7 {
-    self.leader_epoch = pd.get_int32()
+    self.leader_epoch = pd.get_int()
   }
 
   // Decode replicas array
   if self.version < 9 {
-    self.replicas = pd.get_int32_array()
+    self.replicas = pd.get_int_array()
   } else {
-    self.replicas = pd.get_compact_int32_array()
+    self.replicas = pd.get_compact_int_array()
   }
 
   // Decode ISR array
   if self.version < 9 {
-    self.isr = pd.get_int32_array()
+    self.isr = pd.get_int_array()
   } else {
-    self.isr = pd.get_compact_int32_array()
+    self.isr = pd.get_compact_int_array()
   }
 
   // Decode offline replicas for versions 5+
   if self.version >= 5 {
     if self.version < 9 {
-      self.offline_replicas = pd.get_int32_array()
+      self.offline_replicas = pd.get_int_array()
     } else {
-      self.offline_replicas = pd.get_compact_int32_array()
+      self.offline_replicas = pd.get_compact_int_array()
     }
   }
 
@@ -157,7 +157,7 @@ pub impl Encoder for TopicMetadata with encode(self, pe) {
 
   // Encode authorized operations for versions 8+
   if self.version >= 8 {
-    pe.put_int32(self.topic_authorized_operations)
+    pe.put_int(self.topic_authorized_operations)
   }
 
   // Add tagged fields for versions 9+
@@ -219,7 +219,7 @@ pub impl VersionedDecoder for TopicMetadata with decode(self, pd, version) {
 
   // Decode authorized operations for versions 8+
   if self.version >= 8 {
-    self.topic_authorized_operations = pd.get_int32()
+    self.topic_authorized_operations = pd.get_int()
   }
 
   // Skip tagged fields for versions 9+
@@ -297,7 +297,7 @@ pub impl ProtocolBody for MetadataResponse with required_version(self) {
 pub impl Encoder for MetadataResponse with encode(self, pe) {
   // Encode throttle time for versions 3+
   if self.version >= 3 {
-    pe.put_int32(self.throttle_time_ms)
+    pe.put_int(self.throttle_time_ms)
   }
 
   // Encode brokers array
@@ -321,7 +321,7 @@ pub impl Encoder for MetadataResponse with encode(self, pe) {
 
   // Encode controller ID for versions 1+
   if self.version >= 1 {
-    pe.put_int32(self.controller_id)
+    pe.put_int(self.controller_id)
   }
 
   // Encode topics array
@@ -336,7 +336,7 @@ pub impl Encoder for MetadataResponse with encode(self, pe) {
 
   // Encode cluster authorized operations for versions 8+
   if self.version >= 8 {
-    pe.put_int32(self.cluster_authorized_operations)
+    pe.put_int(self.cluster_authorized_operations)
   }
 
   // Add tagged fields for versions 9+
@@ -352,7 +352,7 @@ pub impl VersionedDecoder for MetadataResponse with decode(self, pd, version) {
 
   // Decode throttle time for versions 3+
   if self.version >= 3 {
-    self.throttle_time_ms = pd.get_int32()
+    self.throttle_time_ms = pd.get_int()
   }
 
   // Decode brokers array
@@ -387,7 +387,7 @@ pub impl VersionedDecoder for MetadataResponse with decode(self, pd, version) {
 
   // Decode controller ID for versions 1+
   if self.version >= 1 {
-    self.controller_id = pd.get_int32()
+    self.controller_id = pd.get_int()
   }
 
   // Decode topics array
@@ -415,7 +415,7 @@ pub impl VersionedDecoder for MetadataResponse with decode(self, pd, version) {
 
   // Decode cluster authorized operations for versions 8+
   if self.version >= 8 {
-    self.cluster_authorized_operations = pd.get_int32()
+    self.cluster_authorized_operations = pd.get_int()
   }
 
   // Skip tagged fields for versions 9+

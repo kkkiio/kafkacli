@@ -12,7 +12,7 @@ pub fn RealEncoder::new(raw : Array[Byte]) -> RealEncoder {
 }
 
 ///|
-pub impl PacketEncoder for RealEncoder with put_int8(self, in_) {
+pub impl PacketEncoder for RealEncoder with put_byte(self, in_) {
   self.raw[self.off] = in_
   self.off += 1
 }
@@ -26,7 +26,7 @@ pub impl PacketEncoder for RealEncoder with put_int16(self, in_) {
 }
 
 ///|
-pub impl PacketEncoder for RealEncoder with put_int32(self, in_) {
+pub impl PacketEncoder for RealEncoder with put_int(self, in_) {
   // binary.BigEndian.PutUint32(re.raw[re.off:], uint32(in))
   self.raw[self.off] = (in_ >> 24).to_byte()
   self.raw[self.off + 1] = (in_ >> 16).to_byte()
@@ -70,7 +70,7 @@ pub impl PacketEncoder for RealEncoder with put_float64(self, in_) {
 
 ///|
 pub impl PacketEncoder for RealEncoder with put_array_length(self, in_) {
-  self.put_int32(in_)
+  self.put_int(in_)
 }
 
 ///|
@@ -82,9 +82,9 @@ pub impl PacketEncoder for RealEncoder with put_compact_array_length(self, in_) 
 ///|
 pub impl PacketEncoder for RealEncoder with put_bool(self, in_) {
   if in_ {
-    self.put_int8(1)
+    self.put_byte(1)
   } else {
-    self.put_int8(0)
+    self.put_byte(0)
   }
 }
 
@@ -101,9 +101,9 @@ pub impl PacketEncoder for RealEncoder with put_raw_bytes(self, in_) {
 ///|
 pub impl PacketEncoder for RealEncoder with put_bytes(self, in_) {
   match in_ {
-    None => self.put_int32(-1)
+    None => self.put_int(-1)
     Some(in_) => {
-      self.put_int32(in_.length())
+      self.put_int(in_.length())
       self.put_raw_bytes(in_)
     }
   }
@@ -139,7 +139,7 @@ pub impl PacketEncoder for RealEncoder with put_nullable_compact_string(
   in_,
 ) {
   match in_ {
-    None => self.put_int8(0)
+    None => self.put_byte(0)
     Some(in_) => self.put_compact_string(in_)
   }
 }
@@ -168,16 +168,16 @@ pub impl PacketEncoder for RealEncoder with put_string_array(self, in_) {
 }
 
 ///|
-pub impl PacketEncoder for RealEncoder with put_compact_int32_array(self, in_) {
+pub impl PacketEncoder for RealEncoder with put_compact_int_array(self, in_) {
   // 0 represents a null array, so +1 has to be added
   self.put_uvarint((in_.length() + 1).to_uint64())
   for _, val in in_ {
-    self.put_int32(val)
+    self.put_int(val)
   }
 }
 
 ///|
-pub impl PacketEncoder for RealEncoder with put_nullable_compact_int32_array(
+pub impl PacketEncoder for RealEncoder with put_nullable_compact_int_array(
   self,
   in_,
 ) {
@@ -188,15 +188,15 @@ pub impl PacketEncoder for RealEncoder with put_nullable_compact_int32_array(
   // 0 represents a null array, so +1 has to be added
   self.put_uvarint(in_.length().to_uint64() + 1)
   for _, val in in_ {
-    self.put_int32(val)
+    self.put_int(val)
   }
 }
 
 ///|
-pub impl PacketEncoder for RealEncoder with put_int32_array(self, in_) {
+pub impl PacketEncoder for RealEncoder with put_int_array(self, in_) {
   self.put_array_length(in_.length())
   for _, val in in_ {
-    self.put_int32(val)
+    self.put_int(val)
   }
 }
 

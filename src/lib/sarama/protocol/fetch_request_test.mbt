@@ -5,7 +5,10 @@ test "TestFetchRequestNoBlocks" {
   let request = FetchRequest::new()
   let (packet, body_offset) = encode_test_request(request)
   // Expected: replica_id(-1) + max_wait_time(0) + min_bytes(0) + empty blocks
-  @json.inspect(packet[body_offset:].to_bytes(), content=("\\xff\\xff\\xff\\xff\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00"))
+  @json.inspect(
+    packet[body_offset:].to_bytes(),
+    content="\\xff\\xff\\xff\\xff\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00",
+  )
   test_request_decode(request, packet)
 }
 
@@ -15,7 +18,10 @@ test "TestFetchRequestWithProperties" {
   request.max_wait_time = 0x20
   request.min_bytes = 0xEF
   let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(packet[body_offset:].to_bytes(), content=("\\xff\\xff\\xff\\xff\\x00\\x00\\x00 \\x00\\x00\\x00\\xef\\x00\\x00\\x00\\x00"))
+  @json.inspect(
+    packet[body_offset:].to_bytes(),
+    content="\\xff\\xff\\xff\\xff\\x00\\x00\\x00 \\x00\\x00\\x00\\xef\\x00\\x00\\x00\\x00",
+  )
   test_request_decode(request, packet)
 }
 
@@ -26,7 +32,10 @@ test "TestFetchRequestOneBlock" {
   request.min_bytes = 0
   request.add_block("topic", 0x12, 0x34, 0x56, -1)
   let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(packet[body_offset:].to_bytes(), content=("\\xff\\xff\\xff\\xff\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x05topic\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x12\\x00\\x00\\x00\\x00\\x00\\x00\\x004\\x00\\x00\\x00V"))
+  @json.inspect(
+    packet[body_offset:].to_bytes(),
+    content="\\xff\\xff\\xff\\xff\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x00\\x05topic\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x12\\x00\\x00\\x00\\x00\\x00\\x00\\x004\\x00\\x00\\x00V",
+  )
   test_request_decode(request, packet)
 }
 
@@ -37,7 +46,10 @@ test "TestFetchRequestOneBlockV4" {
   request.isolation_level = ReadCommitted
   request.add_block("topic", 0x12, 0x34, 0x56, -1)
   let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(packet[body_offset:].to_bytes(), content=("\\xff\\xff\\xff\\xff\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xff\\x01\\x00\\x00\\x00\\x01\\x00\\x05topic\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x12\\x00\\x00\\x00\\x00\\x00\\x00\\x004\\x00\\x00\\x00V"))
+  @json.inspect(
+    packet[body_offset:].to_bytes(),
+    content="\\xff\\xff\\xff\\xff\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xff\\x01\\x00\\x00\\x00\\x01\\x00\\x05topic\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x12\\x00\\x00\\x00\\x00\\x00\\x00\\x004\\x00\\x00\\x00V",
+  )
   test_request_decode(request, packet)
 }
 
@@ -51,7 +63,10 @@ test "TestFetchRequestOneBlockV11" {
   request.add_block("topic", 0x12, 0x34, 0x56, 0x66)
   request.rack_id = "rack01"
   let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(packet[body_offset:].to_bytes(), content=("\\xff\\xff\\xff\\xff\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xff\\x01\\x00\\x00\\x00\\xaa\\x00\\x00\\x00\\xee\\x00\\x00\\x00\\x01\\x00\\x05topic\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x12\\x00\\x00\\x00f\\x00\\x00\\x00\\x00\\x00\\x00\\x004\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00V\\x00\\x00\\x00\\x00\\x00\\x06rack01"))
+  @json.inspect(
+    packet[body_offset:].to_bytes(),
+    content="\\xff\\xff\\xff\\xff\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xff\\x01\\x00\\x00\\x00\\xaa\\x00\\x00\\x00\\xee\\x00\\x00\\x00\\x01\\x00\\x05topic\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x12\\x00\\x00\\x00f\\x00\\x00\\x00\\x00\\x00\\x00\\x004\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00V\\x00\\x00\\x00\\x00\\x00\\x06rack01",
+  )
   test_request_decode(request, packet)
 }
 
@@ -86,7 +101,7 @@ test "TestFetchRequestMultipleBlocks" {
   request.add_block("topic1", 0, 100, 1024, 0)
   request.add_block("topic1", 1, 200, 2048, 0)
   request.add_block("topic2", 0, 300, 4096, 0)
-  let (packet, body_offset) = encode_test_request(request)
+  let (packet, _body_offset) = encode_test_request(request)
   test_request_decode(request, packet)
 
   // Verify decoded request has correct blocks

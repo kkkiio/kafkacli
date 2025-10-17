@@ -53,13 +53,13 @@ pub fn FetchRequestBlock::encode(
   pe : &PacketEncoder,
 ) -> Unit {
   if self.version >= 9 {
-    pe.put_int32(self.current_leader_epoch)
+    pe.put_int(self.current_leader_epoch)
   }
   pe.put_int64(self.fetch_offset)
   if self.version >= 5 {
     pe.put_int64(self.log_start_offset)
   }
-  pe.put_int32(self.max_bytes)
+  pe.put_int(self.max_bytes)
 }
 
 ///|
@@ -72,7 +72,7 @@ pub fn FetchRequestBlock::decode(
   {
     version,
     current_leader_epoch: if version >= 9 {
-      pd.get_int32()
+      pd.get_int()
     } else {
       0
     },
@@ -82,7 +82,7 @@ pub fn FetchRequestBlock::decode(
     } else {
       0
     },
-    max_bytes: pd.get_int32(),
+    max_bytes: pd.get_int(),
   }
 }
 
@@ -166,18 +166,18 @@ pub impl Encoder for FetchRequest with encode(self, pe) {
   }
 
   // ReplicaID is always -1 for clients
-  pe.put_int32(-1)
-  pe.put_int32(self.max_wait_time)
-  pe.put_int32(self.min_bytes)
+  pe.put_int(-1)
+  pe.put_int(self.max_wait_time)
+  pe.put_int(self.min_bytes)
   if self.version >= 3 {
-    pe.put_int32(self.max_bytes)
+    pe.put_int(self.max_bytes)
   }
   if self.version >= 4 {
-    pe.put_int8(isolation_level_to_int(self.isolation_level).to_byte())
+    pe.put_byte(isolation_level_to_int(self.isolation_level).to_byte())
   }
   if self.version >= 7 {
-    pe.put_int32(self.session_id)
-    pe.put_int32(self.session_epoch)
+    pe.put_int(self.session_id)
+    pe.put_int(self.session_epoch)
   }
 
   // Encode blocks
@@ -186,7 +186,7 @@ pub impl Encoder for FetchRequest with encode(self, pe) {
     pe.put_string(topic)
     pe.put_array_length(partitions.length())
     for partition_id, block in partitions {
-      pe.put_int32(partition_id)
+      pe.put_int(partition_id)
       block.encode(pe)
     }
   }
@@ -197,7 +197,7 @@ pub impl Encoder for FetchRequest with encode(self, pe) {
       pe.put_string(topic)
       pe.put_array_length(partitions.length())
       for partition_id in partitions {
-        pe.put_int32(partition_id)
+        pe.put_int(partition_id)
       }
     }
   }
@@ -212,19 +212,19 @@ pub impl VersionedDecoder for FetchRequest with decode(self, pd, version) raise 
   self.version = version
 
   // Skip replica_id (always -1 for clients)
-  ignore(pd.get_int32())
-  self.max_wait_time = pd.get_int32()
-  self.min_bytes = pd.get_int32()
+  ignore(pd.get_int())
+  self.max_wait_time = pd.get_int()
+  self.min_bytes = pd.get_int()
   if version >= 3 {
-    self.max_bytes = pd.get_int32()
+    self.max_bytes = pd.get_int()
   }
   if version >= 4 {
-    let isolation = pd.get_int8().to_int()
+    let isolation = pd.get_byte().to_int()
     self.isolation_level = int_to_isolation_level(isolation)
   }
   if version >= 7 {
-    self.session_id = pd.get_int32()
-    self.session_epoch = pd.get_int32()
+    self.session_id = pd.get_int()
+    self.session_epoch = pd.get_int()
   }
 
   // Decode blocks
@@ -236,7 +236,7 @@ pub impl VersionedDecoder for FetchRequest with decode(self, pd, version) raise 
       let partition_count = pd.get_array_length()
       let partitions = Map::new()
       for _ in 0..<partition_count {
-        let partition_id = pd.get_int32()
+        let partition_id = pd.get_int()
         let block = FetchRequestBlock::new()
         let decoded_block = block.decode(pd, version)
         partitions[partition_id] = decoded_block
@@ -254,7 +254,7 @@ pub impl VersionedDecoder for FetchRequest with decode(self, pd, version) raise 
         let partition_count = pd.get_array_length()
         let partitions = Array::new(capacity=partition_count)
         for _ in 0..<partition_count {
-          partitions.push(pd.get_int32())
+          partitions.push(pd.get_int())
         }
         self.forgotten[topic] = partitions
       }

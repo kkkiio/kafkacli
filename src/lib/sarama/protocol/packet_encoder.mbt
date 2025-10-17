@@ -5,9 +5,9 @@
 ///|
 trait PacketEncoder {
   // Primitives
-  put_int8(Self, Byte) -> Unit
+  put_byte(Self, Byte) -> Unit
   put_int16(Self, Int16) -> Unit
-  put_int32(Self, Int) -> Unit
+  put_int(Self, Int) -> Unit
   put_int64(Self, Int64) -> Unit
   put_varint(Self, Int64) -> Unit
   put_uvarint(Self, UInt64) -> Unit
@@ -26,9 +26,9 @@ trait PacketEncoder {
   put_string(Self, String) -> Unit raise
   put_nullable_string(Self, String?) -> Unit raise
   put_string_array(Self, Array[String]) -> Unit raise
-  put_compact_int32_array(Self, Array[Int]) -> Unit raise
-  put_nullable_compact_int32_array(Self, Array[Int]?) -> Unit raise
-  put_int32_array(Self, Array[Int]) -> Unit raise
+  put_compact_int_array(Self, Array[Int]) -> Unit raise
+  put_nullable_compact_int_array(Self, Array[Int]?) -> Unit raise
+  put_int_array(Self, Array[Int]) -> Unit raise
   put_int64_array(Self, Array[Int64]) -> Unit raise
   put_empty_tagged_field_array(Self) -> Unit
 

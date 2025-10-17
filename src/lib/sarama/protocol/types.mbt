@@ -103,9 +103,9 @@ pub fn join_host_port(host : String, port : Int) -> String {
 ///|
 /// Encode broker metadata to packet encoder
 pub impl Encoder for BrokerMetadata with encode(self, pe) {
-  pe.put_int32(self.id)
+  pe.put_int(self.id)
   pe.put_string(self.host)
-  pe.put_int32(self.port)
+  pe.put_int(self.port)
 
   // Encode rack for versions 1+
   if self.version >= 1 {
@@ -122,9 +122,9 @@ pub impl Encoder for BrokerMetadata with encode(self, pe) {
 /// Decode broker metadata from packet decoder
 pub impl VersionedDecoder for BrokerMetadata with decode(self, pd, version) {
   self.version = version.to_int()
-  self.id = pd.get_int32()
+  self.id = pd.get_int()
   self.host = pd.get_string()
-  self.port = pd.get_int32()
+  self.port = pd.get_int()
 
   // Decode rack for versions 1+
   if version >= 1 {

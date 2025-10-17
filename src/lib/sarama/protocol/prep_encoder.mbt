@@ -10,7 +10,7 @@ pub fn PrepEncoder::new() -> PrepEncoder {
 }
 
 ///|
-pub impl PacketEncoder for PrepEncoder with put_int8(self, _) {
+pub impl PacketEncoder for PrepEncoder with put_byte(self, _) {
   self.length = self.length + 1
 }
 
@@ -20,7 +20,7 @@ pub impl PacketEncoder for PrepEncoder with put_int16(self, _) {
 }
 
 ///|
-pub impl PacketEncoder for PrepEncoder with put_int32(self, _) {
+pub impl PacketEncoder for PrepEncoder with put_int(self, _) {
   self.length = self.length + 4
 }
 
@@ -142,13 +142,13 @@ pub impl PacketEncoder for PrepEncoder with put_string_array(self, in_) raise {
 }
 
 ///|
-pub impl PacketEncoder for PrepEncoder with put_compact_int32_array(self, in_) raise {
+pub impl PacketEncoder for PrepEncoder with put_compact_int_array(self, in_) raise {
   self.put_uvarint((in_.length() + 1).to_uint64())
   self.length = self.length + 4 * in_.length()
 }
 
 ///|
-pub impl PacketEncoder for PrepEncoder with put_nullable_compact_int32_array(
+pub impl PacketEncoder for PrepEncoder with put_nullable_compact_int_array(
   self,
   in_,
 ) raise {
@@ -161,7 +161,7 @@ pub impl PacketEncoder for PrepEncoder with put_nullable_compact_int32_array(
 }
 
 ///|
-pub impl PacketEncoder for PrepEncoder with put_int32_array(self, in_) raise {
+pub impl PacketEncoder for PrepEncoder with put_int_array(self, in_) raise {
   self.put_array_length(in_.length())
   self.length = self.length + 4 * in_.length()
 }

@@ -6,51 +6,44 @@ let err_out_of_brokers : Error = Failure(
   "kafka: client has run out of available brokers to talk to",
 )
 
-// ErrBrokerNotFound is the error returned when there's no broker found for the requested ID.
-
 ///|
+/// ErrBrokerNotFound is the error returned when there's no broker found for the requested ID.
 let err_broker_not_found : Error = Failure("kafka: broker for ID is not found")
 
-// ErrClosedClient is the error returned when a method is called on a client that has been closed.
-
 ///|
+/// ErrClosedClient is the error returned when a method is called on a client that has been closed.
 let err_closed_client : Error = Failure(
   "kafka: tried to use a client that was closed",
 )
 
-// ErrIncompleteResponse is the error returned when the server returns a syntactically valid response, but it does
-// not contain the expected information.
-
 ///|
+/// ErrIncompleteResponse is the error returned when the server returns a syntactically valid response, but it does
+/// not contain the expected information.
 let err_incomplete_response : Error = Failure(
   "kafka: response did not contain all the expected topic/partition blocks",
 )
 
+///|
 // ErrInvalidPartition is the error returned when a partitioner returns an invalid partition index
 // (meaning one outside of the range [0...numPartitions-1]).
-
-///|
 let err_invalid_partition : Error = Failure(
   "kafka: partitioner returned an invalid partition index",
 )
 
-// ErrAlreadyConnected is the error returned when calling Open() on a Broker that is already connected or connecting.
-
 ///|
+// ErrAlreadyConnected is the error returned when calling Open() on a Broker that is already connected or connecting.
 let err_already_connected : Error = Failure(
   "kafka: broker connection already initiated",
 )
 
-// ErrNotConnected is the error returned when trying to send or call Close() on a Broker that is not connected.
-
 ///|
+// ErrNotConnected is the error returned when trying to send or call Close() on a Broker that is not connected.
 let err_not_connected : Error = Failure("kafka: broker not connected")
 
+///|
 // ErrInsufficientData is returned when decoding and the packet is truncated. This can be expected
 // when requesting messages, since as an optimization the server is allowed to return a partial message at the end
 // of the message set.
-
-///|
 let err_insufficient_data : PacketDecodingError = PacketDecodingError(
   "kafka: insufficient data to decode packet, more bytes expected",
 )
@@ -239,7 +232,7 @@ impl Show for ConfigurationError with output(self, logger) {
 // See https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ErrorCodes
 
 ///|
-pub(all) suberror KError Int16 derive(ToJson,Eq)
+pub(all) suberror KError Int16 derive(ToJson, Eq)
 
 ///|
 pub fn KError::int_value(self : KError) -> Int16 {

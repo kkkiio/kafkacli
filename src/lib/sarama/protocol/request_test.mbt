@@ -489,29 +489,3 @@ fn[A : VersionedDecoder + ToJson] test_response(
   versioned_decode(encoded, decoded, res.version())
   assert_eq(decoded.to_json(), res.to_json())
 }
-
-///|
-struct MemoryReader {
-  bytes : Bytes
-  mut offset : Int
-}
-
-///|
-pub fn MemoryReader::new(bytes : Bytes) -> MemoryReader {
-  { bytes, offset: 0 }
-}
-
-///|
-pub impl @io.Reader for MemoryReader with read(
-  self,
-  buf,
-  offset? = 0,
-  max_len? = buf.length() - offset,
-) {
-  let max_len = @cmp.minimum(max_len, self.bytes.length() - self.offset)
-  for i in 0..<max_len {
-    buf[offset + i] = self.bytes[self.offset]
-  }
-  self.offset += max_len
-  max_len
-}
