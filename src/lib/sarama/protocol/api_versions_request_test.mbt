@@ -1,9 +1,10 @@
 ///|
 test "TestApiVersionsRequest" {
-  let req = ApiVersionsRequest::new(0)
-  let (packet, body_offset) = encode_test_request(req)
-  @json.inspect(packet[body_offset:].to_bytes())
-  test_request_decode(req, packet)
+  let req = ApiVersionsRequest::default()
+  let bytes = encode_only_body(req)
+  @json.inspect(bytes)
+  let req2 : ApiVersionsRequest = decode_only_body(bytes, req.version())
+  assert_eq(req.to_json(), req2.to_json())
 }
 
 ///|
@@ -13,10 +14,8 @@ test "TestApiVersionsRequestV3" {
     client_software_name: "sarama",
     client_software_version: "0.10.0",
   }
-  let (packet, body_offset) = encode_test_request(req)
-  @json.inspect(
-    packet[body_offset:].to_bytes(),
-    content="\\x07sarama\\x070.10.0\\x00",
-  )
-  test_request_decode(req, packet)
+  let bytes = encode_only_body(req)
+  @json.inspect(bytes, content="\\x07sarama\\x070.10.0\\x00")
+  let req2 : ApiVersionsRequest = decode_only_body(bytes, req.version())
+  assert_eq(req.to_json(), req2.to_json())
 }

@@ -50,6 +50,18 @@ pub fn MetadataRequest::new(
 }
 
 ///|
+/// Provide a default empty metadata request for decoding helpers
+pub impl Default for MetadataRequest with default() {
+  {
+    version: 0,
+    topics: [],
+    allow_auto_topic_creation: false,
+    include_cluster_authorized_operations: false,
+    include_topic_authorized_operations: false,
+  }
+}
+
+///|
 /// Encode metadata request to packet encoder
 pub impl Encoder for MetadataRequest with encode(self, pe) {
   if self.version < 0 || self.version > 10 {

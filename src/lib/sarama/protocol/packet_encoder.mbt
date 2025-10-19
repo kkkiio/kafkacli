@@ -3,7 +3,7 @@
 // not about how a string is represented in Kafka.
 
 ///|
-trait PacketEncoder {
+pub trait PacketEncoder {
   // Primitives
   put_byte(Self, Byte) -> Unit
   put_int16(Self, Int16) -> Unit

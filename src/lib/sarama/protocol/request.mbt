@@ -94,9 +94,13 @@ pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
     // apiKeyLeaveGroup => LeaveGroupRequest::new(version)
     // apiKeySyncGroup => SyncGroupRequest::new(version)
     // apiKeyDescribeGroups => DescribeGroupsRequest::new(version)
-    // apiKeyListGroups => ListGroupsRequest::new(version)
+    ApiKeyListGroups => ListGroups(ListGroupsRequest::with_version(version))
     // apiKeySaslHandshake => SaslHandshakeRequest::new(version)
-    ApiKeyApiVersions => ApiVersions(ApiVersionsRequest::new(version))
+    ApiKeyApiVersions =>
+      ApiVersions(ApiVersionsRequest::{
+        ..ApiVersionsRequest::default(),
+        version,
+      })
     // apiKeyCreateTopics => CreateTopicsRequest::new(version)
     // apiKeyDeleteTopics => DeleteTopicsRequest::new(version)
     // apiKeyDeleteRecords => DeleteRecordsRequest::new(version)
@@ -158,10 +162,12 @@ pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
 }
 
 ///|
-pub enum ProtocolBodyAdapter {
+pub(all) enum ProtocolBodyAdapter {
   ApiVersions(ApiVersionsRequest)
   Metadata(MetadataRequest)
   Fetch(FetchRequest)
+  ListGroups(ListGroupsRequest)
+  ListGroupsResponse(ListGroupsResponse)
 } derive(Show, ToJson)
 
 ///|
@@ -170,6 +176,8 @@ pub impl ProtocolBody for ProtocolBodyAdapter with key(self) {
     ApiVersions(body) => body.key()
     Metadata(body) => body.key()
     Fetch(body) => body.key()
+    ListGroups(body) => body.key()
+    ListGroupsResponse(body) => body.key()
   }
 }
 
@@ -179,6 +187,8 @@ pub impl ProtocolBody for ProtocolBodyAdapter with version(self) {
     ApiVersions(body) => body.version()
     Metadata(body) => body.version()
     Fetch(body) => body.version()
+    ListGroups(body) => body.version()
+    ListGroupsResponse(body) => body.version()
   }
 }
 
@@ -188,6 +198,8 @@ pub impl ProtocolBody for ProtocolBodyAdapter with set_version(self, version) {
     ApiVersions(body) => body.set_version(version)
     Metadata(body) => body.set_version(version)
     Fetch(body) => body.set_version(version)
+    ListGroups(body) => body.set_version(version)
+    ListGroupsResponse(body) => body.set_version(version)
   }
 }
 
@@ -197,6 +209,8 @@ pub impl EncoderWithHeader for ProtocolBodyAdapter with header_version(self) {
     ApiVersions(body) => body.header_version()
     Metadata(body) => body.header_version()
     Fetch(body) => body.header_version()
+    ListGroups(body) => body.header_version()
+    ListGroupsResponse(body) => body.header_version()
   }
 }
 
@@ -206,6 +220,8 @@ pub impl ProtocolBody for ProtocolBodyAdapter with is_valid_version(self) {
     ApiVersions(body) => body.is_valid_version()
     Metadata(body) => body.is_valid_version()
     Fetch(body) => body.is_valid_version()
+    ListGroups(body) => body.is_valid_version()
+    ListGroupsResponse(body) => body.is_valid_version()
   }
 }
 
@@ -215,6 +231,8 @@ pub impl ProtocolBody for ProtocolBodyAdapter with required_version(self) {
     ApiVersions(body) => body.required_version()
     Metadata(body) => body.required_version()
     Fetch(body) => body.required_version()
+    ListGroups(body) => body.required_version()
+    ListGroupsResponse(body) => body.required_version()
   }
 }
 
@@ -224,6 +242,8 @@ pub impl VersionedDecoder for ProtocolBodyAdapter with decode(self, pd, version)
     ApiVersions(body) => body.decode(pd, version)
     Metadata(body) => body.decode(pd, version)
     Fetch(body) => body.decode(pd, version)
+    ListGroups(body) => body.decode(pd, version)
+    ListGroupsResponse(body) => body.decode(pd, version)
   }
 }
 
@@ -233,5 +253,7 @@ pub impl Encoder for ProtocolBodyAdapter with encode(self, pe) {
     ApiVersions(body) => body.encode(pe)
     Metadata(body) => body.encode(pe)
     Fetch(body) => body.encode(pe)
+    ListGroups(body) => body.encode(pe)
+    ListGroupsResponse(body) => body.encode(pe)
   }
 }

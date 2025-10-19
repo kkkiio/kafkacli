@@ -13,7 +13,7 @@ pub async fn api_versions(broker : String) -> Unit {
     err => fail("Failed to connect to broker: \{err}, addr=\{addr}")
   }
   defer socket.close()
-  let body = @protocol.ApiVersionsRequest::new(0)
+  let body = @protocol.ApiVersionsRequest::default()
   let req = @protocol.Request::{ body, correlation_id: 123, client_id: "foo" }
   let req_packet = @protocol.encode(req)
   socket.write(req_packet)

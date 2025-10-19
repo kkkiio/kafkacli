@@ -21,7 +21,10 @@ test "Test basic empty metadata response V0" {
     topics: Array::new(),
     cluster_authorized_operations: 0,
   }
-  test_response(response, empty_response_v0, decoded)
+  let encoded = encode(response)
+  assert_eq(encoded, empty_response_v0)
+  versioned_decode(encoded, decoded, response.version())
+  assert_eq(decoded.to_json(), response.to_json())
 
   // Verify the decoded response
   inspect(decoded.brokers.length(), content="0")
@@ -80,7 +83,10 @@ test "Test metadata response with brokers V0" {
     topics: Array::new(),
     cluster_authorized_operations: 0,
   }
-  test_response(response, brokers_response_v0, decoded)
+  let encoded = encode(response)
+  assert_eq(encoded, brokers_response_v0)
+  versioned_decode(encoded, decoded, response.version())
+  assert_eq(decoded.to_json(), response.to_json())
 
   // Verify the decoded response
   inspect(decoded.brokers.length(), content="2")
@@ -247,7 +253,10 @@ test "Test metadata response with rack information V1" {
     topics: Array::new(),
     cluster_authorized_operations: 0,
   }
-  test_response(response, rack_response_v1, decoded)
+  let encoded = encode(response)
+  assert_eq(encoded, rack_response_v1)
+  versioned_decode(encoded, decoded, response.version())
+  assert_eq(decoded.to_json(), response.to_json())
 
   // Verify the decoded response
   inspect(decoded.brokers.length(), content="2")

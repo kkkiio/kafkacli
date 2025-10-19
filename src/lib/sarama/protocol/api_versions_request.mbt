@@ -1,10 +1,4 @@
 ///|
-pub const DefaultClientSoftwareName : String = "sarama"
-
-///|
-pub const DefaultClientSoftwareVersion : String = "0.1.0"
-
-///|
 pub(all) struct ApiVersionsRequest {
   // Version defines the protocol version to use for encode and decode
   mut version : Int16
@@ -12,16 +6,7 @@ pub(all) struct ApiVersionsRequest {
   mut client_software_name : String
   // ClientSoftwareVersion contains the version of the client.
   mut client_software_version : String
-} derive(Show, ToJson)
-
-///|
-pub fn ApiVersionsRequest::new(version : Int16) -> ApiVersionsRequest {
-  {
-    version,
-    client_software_name: DefaultClientSoftwareName,
-    client_software_version: "",
-  }
-}
+} derive(Show, ToJson, Default)
 
 ///|
 pub impl Encoder for ApiVersionsRequest with encode(self, pe) {

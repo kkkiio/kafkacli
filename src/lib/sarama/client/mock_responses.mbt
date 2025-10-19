@@ -43,7 +43,7 @@ pub fn mock_wrapper_new(res : &@protocol.EncoderWithHeader) -> MockWrapper {
 
 ///|
 /// Implement MockResponse for MockWrapper
-pub impl MockResponse for MockWrapper with for_(self, req_body) {
+pub impl MockResponse for MockWrapper with for_(self, _) {
   self.res
 }
 
@@ -71,7 +71,6 @@ pub impl MockResponse for MockSequence with for_(self, req_body) {
   let response = self.responses[0]
   // If we have more than one response, shift the array
   if self.responses.length() > 1 {
-    // self.responses = self.responses[1:]
     self.responses.remove(0) |> ignore
   }
   response.for_(req_body)
@@ -103,12 +102,16 @@ pub fn MockListGroupsResponse::add_group(
 ///|
 /// Implement MockResponse for MockListGroupsResponse
 pub impl MockResponse for MockListGroupsResponse with for_(self, req_body) {
-  // This would need to decode the request and create a response
-  // For now, return a basic response structure
-  // let response = @protocol.ListGroupsResponse::new()
-  // response.groups = self.groups
-  // response
-  ...
+  // Create a response based on the request version
+  let response = @protocol.ListGroupsResponse::new()
+
+  // Copy groups from the mock response
+  for group_id, protocol_type in self.groups {
+    ignore(response.add_group(group_id, protocol_type))
+  }
+
+  // Return as ProtocolBodyAdapter
+  @protocol.ProtocolBodyAdapter::ListGroupsResponse(response)
 }
 
 ///|

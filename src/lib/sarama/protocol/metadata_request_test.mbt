@@ -9,9 +9,10 @@ test "TestMetadataRequestV0" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(packet[body_offset:].to_bytes(), content="\\x00\\x00\\x00\\x00")
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\x00\\x00\\x00\\x00")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 0,
     topics: ["topic1"],
@@ -19,14 +20,16 @@ test "TestMetadataRequestV0" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_three_topics = MetadataRequest::{
     version: 0,
     topics: ["foo", "bar", "baz"],
@@ -34,14 +37,16 @@ test "TestMetadataRequestV0" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_three_topics, body_offset_three_topics) = encode_test_request(
-    request_three_topics,
-  )
+  let packet_three_topics = encode_only_body(request_three_topics)
   @json.inspect(
-    packet_three_topics[body_offset_three_topics:].to_bytes(),
+    packet_three_topics,
     content="\\x00\\x00\\x00\\x03\\x00\\x03foo\\x00\\x03bar\\x00\\x03baz",
   )
-  test_request_decode(request_three_topics, packet_three_topics)
+  let decoded_three : MetadataRequest = decode_only_body(
+    packet_three_topics,
+    request_three_topics.version(),
+  )
+  assert_eq(request_three_topics.to_json(), decoded_three.to_json())
 }
 
 ///|
@@ -53,9 +58,10 @@ test "TestMetadataRequestV1" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(packet[body_offset:].to_bytes(), content="\\xff\\xff\\xff\\xff")
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\xff\\xff\\xff\\xff")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 1,
     topics: ["topic1"],
@@ -63,14 +69,16 @@ test "TestMetadataRequestV1" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_three_topics = MetadataRequest::{
     version: 1,
     topics: ["foo", "bar", "baz"],
@@ -78,14 +86,16 @@ test "TestMetadataRequestV1" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_three_topics, body_offset_three_topics) = encode_test_request(
-    request_three_topics,
-  )
+  let packet_three_topics = encode_only_body(request_three_topics)
   @json.inspect(
-    packet_three_topics[body_offset_three_topics:].to_bytes(),
+    packet_three_topics,
     content="\\x00\\x00\\x00\\x03\\x00\\x03foo\\x00\\x03bar\\x00\\x03baz",
   )
-  test_request_decode(request_three_topics, packet_three_topics)
+  let decoded_three : MetadataRequest = decode_only_body(
+    packet_three_topics,
+    request_three_topics.version(),
+  )
+  assert_eq(request_three_topics.to_json(), decoded_three.to_json())
 }
 
 ///|
@@ -97,9 +107,10 @@ test "TestMetadataRequestV2" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(packet[body_offset:].to_bytes(), content="\\xff\\xff\\xff\\xff")
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\xff\\xff\\xff\\xff")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 2,
     topics: ["topic1"],
@@ -107,14 +118,16 @@ test "TestMetadataRequestV2" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_three_topics = MetadataRequest::{
     version: 2,
     topics: ["foo", "bar", "baz"],
@@ -122,14 +135,16 @@ test "TestMetadataRequestV2" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_three_topics, body_offset_three_topics) = encode_test_request(
-    request_three_topics,
-  )
+  let packet_three_topics = encode_only_body(request_three_topics)
   @json.inspect(
-    packet_three_topics[body_offset_three_topics:].to_bytes(),
+    packet_three_topics,
     content="\\x00\\x00\\x00\\x03\\x00\\x03foo\\x00\\x03bar\\x00\\x03baz",
   )
-  test_request_decode(request_three_topics, packet_three_topics)
+  let decoded_three : MetadataRequest = decode_only_body(
+    packet_three_topics,
+    request_three_topics.version(),
+  )
+  assert_eq(request_three_topics.to_json(), decoded_three.to_json())
 }
 
 ///|
@@ -141,9 +156,10 @@ test "TestMetadataRequestV3" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(packet[body_offset:].to_bytes(), content="\\xff\\xff\\xff\\xff")
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\xff\\xff\\xff\\xff")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 3,
     topics: ["topic1"],
@@ -151,14 +167,16 @@ test "TestMetadataRequestV3" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_three_topics = MetadataRequest::{
     version: 3,
     topics: ["foo", "bar", "baz"],
@@ -166,14 +184,16 @@ test "TestMetadataRequestV3" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_three_topics, body_offset_three_topics) = encode_test_request(
-    request_three_topics,
-  )
+  let packet_three_topics = encode_only_body(request_three_topics)
   @json.inspect(
-    packet_three_topics[body_offset_three_topics:].to_bytes(),
+    packet_three_topics,
     content="\\x00\\x00\\x00\\x03\\x00\\x03foo\\x00\\x03bar\\x00\\x03baz",
   )
-  test_request_decode(request_three_topics, packet_three_topics)
+  let decoded_three : MetadataRequest = decode_only_body(
+    packet_three_topics,
+    request_three_topics.version(),
+  )
+  assert_eq(request_three_topics.to_json(), decoded_three.to_json())
 }
 
 ///|
@@ -185,12 +205,10 @@ test "TestMetadataRequestV4" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(
-    packet[body_offset:].to_bytes(),
-    content="\\xff\\xff\\xff\\xff\\x00",
-  )
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 4,
     topics: ["topic1"],
@@ -198,14 +216,16 @@ test "TestMetadataRequestV4" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x01",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
     version: 4,
     topics: ["topic1"],
@@ -213,14 +233,16 @@ test "TestMetadataRequestV4" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_no_auto_create, body_offset_no_auto_create) = encode_test_request(
-    request_no_auto_create,
-  )
+  let packet_no_auto_create = encode_only_body(request_no_auto_create)
   @json.inspect(
-    packet_no_auto_create[body_offset_no_auto_create:].to_bytes(),
+    packet_no_auto_create,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x00",
   )
-  test_request_decode(request_no_auto_create, packet_no_auto_create)
+  let decoded_no_auto : MetadataRequest = decode_only_body(
+    packet_no_auto_create,
+    request_no_auto_create.version(),
+  )
+  assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
 }
 
 ///|
@@ -232,12 +254,10 @@ test "TestMetadataRequestV5" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(
-    packet[body_offset:].to_bytes(),
-    content="\\xff\\xff\\xff\\xff\\x00",
-  )
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 5,
     topics: ["topic1"],
@@ -245,14 +265,16 @@ test "TestMetadataRequestV5" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x01",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
     version: 5,
     topics: ["topic1"],
@@ -260,14 +282,16 @@ test "TestMetadataRequestV5" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_no_auto_create, body_offset_no_auto_create) = encode_test_request(
-    request_no_auto_create,
-  )
+  let packet_no_auto_create = encode_only_body(request_no_auto_create)
   @json.inspect(
-    packet_no_auto_create[body_offset_no_auto_create:].to_bytes(),
+    packet_no_auto_create,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x00",
   )
-  test_request_decode(request_no_auto_create, packet_no_auto_create)
+  let decoded_no_auto : MetadataRequest = decode_only_body(
+    packet_no_auto_create,
+    request_no_auto_create.version(),
+  )
+  assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
 }
 
 ///|
@@ -279,12 +303,10 @@ test "TestMetadataRequestV6" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(
-    packet[body_offset:].to_bytes(),
-    content="\\xff\\xff\\xff\\xff\\x00",
-  )
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 6,
     topics: ["topic1"],
@@ -292,14 +314,16 @@ test "TestMetadataRequestV6" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x01",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
     version: 6,
     topics: ["topic1"],
@@ -307,14 +331,16 @@ test "TestMetadataRequestV6" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_no_auto_create, body_offset_no_auto_create) = encode_test_request(
-    request_no_auto_create,
-  )
+  let packet_no_auto_create = encode_only_body(request_no_auto_create)
   @json.inspect(
-    packet_no_auto_create[body_offset_no_auto_create:].to_bytes(),
+    packet_no_auto_create,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x00",
   )
-  test_request_decode(request_no_auto_create, packet_no_auto_create)
+  let decoded_no_auto : MetadataRequest = decode_only_body(
+    packet_no_auto_create,
+    request_no_auto_create.version(),
+  )
+  assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
 }
 
 ///|
@@ -326,12 +352,10 @@ test "TestMetadataRequestV7" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(
-    packet[body_offset:].to_bytes(),
-    content="\\xff\\xff\\xff\\xff\\x00",
-  )
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 7,
     topics: ["topic1"],
@@ -339,14 +363,16 @@ test "TestMetadataRequestV7" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x01",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
     version: 7,
     topics: ["topic1"],
@@ -354,14 +380,16 @@ test "TestMetadataRequestV7" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_no_auto_create, body_offset_no_auto_create) = encode_test_request(
-    request_no_auto_create,
-  )
+  let packet_no_auto_create = encode_only_body(request_no_auto_create)
   @json.inspect(
-    packet_no_auto_create[body_offset_no_auto_create:].to_bytes(),
+    packet_no_auto_create,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x00",
   )
-  test_request_decode(request_no_auto_create, packet_no_auto_create)
+  let decoded_no_auto : MetadataRequest = decode_only_body(
+    packet_no_auto_create,
+    request_no_auto_create.version(),
+  )
+  assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
 }
 
 ///|
@@ -373,12 +401,10 @@ test "TestMetadataRequestV8" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(
-    packet[body_offset:].to_bytes(),
-    content="\\xff\\xff\\xff\\xff\\x00\\x00\\x00",
-  )
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00\\x00\\x00")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 8,
     topics: ["topic1"],
@@ -386,14 +412,16 @@ test "TestMetadataRequestV8" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x01\\x00\\x00",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
     version: 8,
     topics: ["topic1"],
@@ -401,14 +429,16 @@ test "TestMetadataRequestV8" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_no_auto_create, body_offset_no_auto_create) = encode_test_request(
-    request_no_auto_create,
-  )
+  let packet_no_auto_create = encode_only_body(request_no_auto_create)
   @json.inspect(
-    packet_no_auto_create[body_offset_no_auto_create:].to_bytes(),
+    packet_no_auto_create,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x00\\x00\\x00",
   )
-  test_request_decode(request_no_auto_create, packet_no_auto_create)
+  let decoded_no_auto : MetadataRequest = decode_only_body(
+    packet_no_auto_create,
+    request_no_auto_create.version(),
+  )
+  assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
   let request_auth = MetadataRequest::{
     version: 8,
     topics: ["topic1"],
@@ -416,12 +446,16 @@ test "TestMetadataRequestV8" {
     include_cluster_authorized_operations: true,
     include_topic_authorized_operations: true,
   }
-  let (packet_auth, body_offset_auth) = encode_test_request(request_auth)
+  let packet_auth = encode_only_body(request_auth)
   @json.inspect(
-    packet_auth[body_offset_auth:].to_bytes(),
+    packet_auth,
     content="\\x00\\x00\\x00\\x01\\x00\\x06topic1\\x01\\x01\\x01",
   )
-  test_request_decode(request_auth, packet_auth)
+  let decoded_auth : MetadataRequest = decode_only_body(
+    packet_auth,
+    request_auth.version(),
+  )
+  assert_eq(request_auth.to_json(), decoded_auth.to_json())
 }
 
 ///|
@@ -433,12 +467,10 @@ test "TestMetadataRequestV9" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(
-    packet[body_offset:].to_bytes(),
-    content="\\x00\\x00\\x00\\x00\\x00",
-  )
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\x00\\x00\\x00\\x00\\x00")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 9,
     topics: ["topic1"],
@@ -446,14 +478,16 @@ test "TestMetadataRequestV9" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_one_topic, body_offset_one_topic) = encode_test_request(
-    request_one_topic,
-  )
+  let packet_one_topic = encode_only_body(request_one_topic)
   @json.inspect(
-    packet_one_topic[body_offset_one_topic:].to_bytes(),
+    packet_one_topic,
     content="\\x02\\x07topic1\\x00\\x00\\x00\\x00\\x00",
   )
-  test_request_decode(request_one_topic, packet_one_topic)
+  let decoded_one : MetadataRequest = decode_only_body(
+    packet_one_topic,
+    request_one_topic.version(),
+  )
+  assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_auth = MetadataRequest::{
     version: 9,
     topics: ["topic1"],
@@ -461,12 +495,16 @@ test "TestMetadataRequestV9" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: true,
   }
-  let (packet_auth, body_offset_auth) = encode_test_request(request_auth)
+  let packet_auth = encode_only_body(request_auth)
   @json.inspect(
-    packet_auth[body_offset_auth:].to_bytes(),
+    packet_auth,
     content="\\x02\\x07topic1\\x00\\x01\\x00\\x01\\x00",
   )
-  test_request_decode(request_auth, packet_auth)
+  let decoded_auth : MetadataRequest = decode_only_body(
+    packet_auth,
+    request_auth.version(),
+  )
+  assert_eq(request_auth.to_json(), decoded_auth.to_json())
 }
 
 ///|
@@ -478,12 +516,10 @@ test "TestMetadataRequestV10" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet, body_offset) = encode_test_request(request)
-  @json.inspect(
-    packet[body_offset:].to_bytes(),
-    content="\\x00\\x00\\x00\\x00\\x00",
-  )
-  test_request_decode(request, packet)
+  let bytes = encode_only_body(request)
+  @json.inspect(bytes, content="\\x00\\x00\\x00\\x00\\x00")
+  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  assert_eq(request.to_json(), decoded.to_json())
   let request_two_topics = MetadataRequest::{
     version: 10,
     topics: ["topic1", "topic2"],
@@ -491,14 +527,16 @@ test "TestMetadataRequestV10" {
     include_cluster_authorized_operations: false,
     include_topic_authorized_operations: false,
   }
-  let (packet_two_topics, body_offset_two_topics) = encode_test_request(
-    request_two_topics,
-  )
+  let packet_two_topics = encode_only_body(request_two_topics)
   @json.inspect(
-    packet_two_topics[body_offset_two_topics:].to_bytes(),
+    packet_two_topics,
     content="\\x03\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x07topic1\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x07topic2\\x00\\x00\\x00\\x00\\x00",
   )
-  test_request_decode(request_two_topics, packet_two_topics)
+  let decoded_two : MetadataRequest = decode_only_body(
+    packet_two_topics,
+    request_two_topics.version(),
+  )
+  assert_eq(request_two_topics.to_json(), decoded_two.to_json())
   let request_auth = MetadataRequest::{
     version: 10,
     topics: ["topic1", "topic2"],
@@ -506,10 +544,14 @@ test "TestMetadataRequestV10" {
     include_cluster_authorized_operations: true,
     include_topic_authorized_operations: true,
   }
-  let (packet_auth, body_offset_auth) = encode_test_request(request_auth)
+  let packet_auth = encode_only_body(request_auth)
   @json.inspect(
-    packet_auth[body_offset_auth:].to_bytes(),
+    packet_auth,
     content="\\x03\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x07topic1\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x07topic2\\x00\\x01\\x01\\x01\\x00",
   )
-  test_request_decode(request_auth, packet_auth)
+  let decoded_auth : MetadataRequest = decode_only_body(
+    packet_auth,
+    request_auth.version(),
+  )
+  assert_eq(request_auth.to_json(), decoded_auth.to_json())
 }

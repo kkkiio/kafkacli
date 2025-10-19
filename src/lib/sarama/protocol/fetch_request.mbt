@@ -103,7 +103,7 @@ pub(all) struct FetchRequest {
 
 ///|
 /// Create a new fetch request with default values
-pub fn FetchRequest::new() -> FetchRequest {
+pub impl Default for FetchRequest with default() {
   {
     version: 0,
     max_wait_time: 0,
@@ -116,6 +116,11 @@ pub fn FetchRequest::new() -> FetchRequest {
     forgotten: Map::new(),
     rack_id: "",
   }
+}
+
+///|
+pub fn FetchRequest::new() -> FetchRequest {
+  FetchRequest::default()
 }
 
 ///|

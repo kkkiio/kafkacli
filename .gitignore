@@ -3,3 +3,4 @@ target/
 .moonagent/
 .DS_Store
 .githooks/
+.claude/

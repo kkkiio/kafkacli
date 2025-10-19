@@ -3,6 +3,12 @@
 /// This module provides the high-level client interface and metadata management
 
 ///|
+pub const DefaultClientSoftwareName : String = "sarama"
+
+///|
+pub const DefaultClientSoftwareVersion : String = "0.1.0"
+
+///|
 /// Offset constants for GetOffset method
 pub const OffsetNewest : Int64 = -1L
 
