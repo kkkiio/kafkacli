@@ -13,6 +13,13 @@
 - **不包含**：async_close 方法、消息缓冲、pause/resume 功能
 - **不包含**：high_water_mark_offset 方法、重复消费检查
 
+## 设计方案
+- **分区消费者状态**：`KafkaPartitionConsumer` 的 `offset`、`is_closed` 字段改为 `mut`，以便 `fetch_messages` 在成功返回后推进 offset 并阻止重复拉取；`close` 设置 `is_closed = true`，再次调用 `fetch_messages` 将直接 fail。
+- **Offset 校验逻辑**：`partition_consumer_choose_starting_offset` 使用 `kafka_client_get_offset` 查询最早和最新 offset；当用户提供具体 offset 时，对比有效区间 `[earliest, latest]`，越界时触发 `fail("Offset out of range ...")`。
+- **Fetch 流程**：沿用当前 FetchRequest→FetchResponse 解码链路，增加“最后一条消息 offset + 1”写回逻辑，保证多次 `fetch_messages` 能增量推进；对空批次返回空数组并保留原 offset。
+- **错误抛出约定**：保持 MVP 风格，遇到网络、解码、协议错误直接 `fail`，但在 offset 越界场景给出明确错误信息，便于 CLI 反馈。
+- **CLI 输出**：`consume_partition` 在打印消息时同步输出新的 offset，未来可复用该值继续消费。
+
 ## Impact
 - Affected specs: consumer 功能规格
 - Affected code:
