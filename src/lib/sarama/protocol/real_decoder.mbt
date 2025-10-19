@@ -246,13 +246,8 @@ pub impl PacketDecoder for RealDecoder with get_string(self) {
   if n == -1 {
     return ""
   }
-  let tmpStr = {
-    let bytes = self.raw[self.off:self.off + n].to_bytes()
-    // Simple UTF-8 validation - for now just convert bytes to string
-    // TODO: implement proper UTF-8 decoding
-    // For now, just return an empty string - proper UTF-8 decoding can be added later
-    // TODO: implement proper UTF-8 decoding
-    ""
+  let tmpStr = @encoding/utf8.decode(self.raw[self.off:self.off + n].to_bytes()) catch {
+    _ => raise PacketDecodingError("failed to decode string")
   }
   self.off += n
   tmpStr
@@ -264,13 +259,8 @@ pub impl PacketDecoder for RealDecoder with get_nullable_string(self) {
   if n == -1 {
     return None
   }
-  let tmpStr = {
-    let bytes = self.raw[self.off:self.off + n].to_bytes()
-    // Simple UTF-8 validation - for now just convert bytes to string
-    // TODO: implement proper UTF-8 decoding
-    // For now, just return an empty string - proper UTF-8 decoding can be added later
-    // TODO: implement proper UTF-8 decoding
-    ""
+  let tmpStr = @encoding/utf8.decode(self.raw[self.off:self.off + n].to_bytes()) catch {
+    _ => raise PacketDecodingError("failed to decode string")
   }
   self.off += n
   Some(tmpStr)
@@ -283,13 +273,10 @@ pub impl PacketDecoder for RealDecoder with get_compact_string(self) {
   if length < 0 {
     raise errInvalidByteSliceLength
   }
-  let tmpStr = {
-    let bytes = self.raw[self.off:self.off + length].to_bytes()
-    // Simple UTF-8 validation - for now just convert bytes to string
-    // TODO: implement proper UTF-8 decoding
-    // For now, just return an empty string - proper UTF-8 decoding can be added later
-    // TODO: implement proper UTF-8 decoding
-    ""
+  let tmpStr = @encoding/utf8.decode(
+    self.raw[self.off:self.off + length].to_bytes(),
+  ) catch {
+    _ => raise PacketDecodingError("failed to decode string")
   }
   self.off += length
   tmpStr
@@ -305,13 +292,10 @@ pub impl PacketDecoder for RealDecoder with get_compact_nullable_string(self) {
   if length < 0 {
     raise errInvalidByteSliceLength
   }
-  let tmpStr = {
-    let bytes = self.raw[self.off:self.off + length].to_bytes()
-    // Simple UTF-8 validation - for now just convert bytes to string
-    // TODO: implement proper UTF-8 decoding
-    // For now, just return an empty string - proper UTF-8 decoding can be added later
-    // TODO: implement proper UTF-8 decoding
-    ""
+  let tmpStr = @encoding/utf8.decode(
+    self.raw[self.off:self.off + length].to_bytes(),
+  ) catch {
+    _ => raise PacketDecodingError("failed to decode string")
   }
   self.off += length
   Some(tmpStr)
