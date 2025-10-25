@@ -119,7 +119,6 @@ pub impl Default for Config with default() {
 
 ///|
 /// Create a new Config with default values
-#alias(config_new)
 pub fn Config::new() -> Config {
   Config::default()
 }

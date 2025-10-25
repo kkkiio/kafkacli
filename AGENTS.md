@@ -23,10 +23,9 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 编写快照测试时, 不要填`inspect`的`content`参数, 运行 `moon test --update` 自动生成.
 
-# MoonBit Project Layouts
+用 mermaid 画图.
 
-You have the ability to detect specific types of MoonBit projects and work with
-them adaptively.
+# MoonBit Project Layouts
 
 MoonBit source files use the `.mbt` extension and interface files `.mbti`. At
 the top-level of a MoonBit project there is a `moon.mod.json` file specifying
@@ -450,7 +449,7 @@ struct Counter {
 
 ///|
 fn increment(c : Counter) -> Unit {
-  let tmp = c // don't declare tmp as 'mut', cause we don't rebind tmp, we just modify its field
+  let tmp = c // unlike Rust, no need to declare `tmp` as `mut`, unless you want to reassign `tmp`
   tmp.value += 1 // Modifies the original
 }
 
@@ -642,7 +641,7 @@ fn use_parse() -> Int raise ParseError {
 }
 
 ///|
-/// 2. Mark `raise` for all possible errors, don't care what error it is
+/// Mark `raise` for all possible errors, don't care what error it is
 /// If you are doing a quick prototype, just mark it as raise is good enough.
 fn use_parse2() -> Int raise {
   let x = parse_int("123")

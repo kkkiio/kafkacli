@@ -7,7 +7,7 @@
 /// Partition metadata contains each partition in the topic
 pub(all) struct PartitionMetadata {
   mut version : Int16
-  mut err : KError
+  mut err : KErrorCode
   mut id : Int
   mut leader : Int
   mut leader_epoch : Int
@@ -63,7 +63,7 @@ pub fn[T : PacketDecoder] PartitionMetadata::decode(
   pd : T,
   version : Int16,
 ) -> PartitionMetadata raise PacketDecodingError {
-  let err = KError(pd.get_int16())
+  let err = KErrorCode(pd.get_int16())
   let id = pd.get_int()
   let leader = pd.get_int()
 
@@ -106,7 +106,7 @@ pub fn[T : PacketDecoder] PartitionMetadata::decode(
 /// Topic metadata contains each topic in the response
 pub(all) struct TopicMetadata {
   mut version : Int16
-  mut err : KError
+  mut err : KErrorCode
   mut name : String
   mut uuid : @uuid.UUID
   mut is_internal : Bool
@@ -175,7 +175,7 @@ pub fn[T : PacketDecoder] TopicMetadata::decode(
   pd : T,
   version : Int16,
 ) -> TopicMetadata raise PacketDecodingError {
-  let err = KError(pd.get_int16())
+  let err = KErrorCode(pd.get_int16())
 
   // Decode topic name
   let name = if version < 9 { pd.get_string() } else { pd.get_compact_string() }

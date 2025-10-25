@@ -18,7 +18,13 @@
 #### Scenario: Simple error handling
 - **WHEN** 消费过程中发生网络错误或协议错误
 - **THEN** 系统 SHALL 直接 raise 错误，不进行自动重试
-- **AND** 包括网络连接错误、offset 越界、broker 不可达等所有错误
+- **AND** 包括网络连接错误、offset 越界、broker 永久不可达等错误（leader 相关错误除外）
+
+#### Scenario: Automatic leader resolution
+- **WHEN** Fetch 请求返回 `NotLeaderForPartition`、`LeaderNotAvailable` 或 `ReplicaNotAvailable`
+- **THEN** 系统 SHALL 刷新指定 topic 的元数据
+- **AND** SHALL 重新解析该分区的最新 leader broker 并重建连接
+- **AND** SHALL 在新的 leader 上重试当前 Fetch 请求
 
 #### Scenario: Basic resource cleanup
 - **WHEN** 用户调用 `close()` 方法

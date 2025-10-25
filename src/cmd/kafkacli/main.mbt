@@ -11,6 +11,10 @@ fn main {
     println(usage)
     return
   }
+  let logger : @pino.Logger = @pino.logger(
+    "kafkacli",
+    @pino.Transport::console(),
+  )
   match sub_command {
     "consume" => {
       let usage =
@@ -178,7 +182,7 @@ fn main {
           println("bootstrap server is required")
           return
         }
-        _ => bootstrap_servers.val
+        _ => bootstrap_servers.val.split(",").map(_.to_string()).to_array()
       }
       let topic = match topic.val {
         "" => {
@@ -216,7 +220,7 @@ fn main {
         }
       }
       @async.with_event_loop(fn(_) {
-        consume_partition(bootstrap_servers, topic, partition, offset)
+        consume_partition(logger, bootstrap_servers, topic, partition, offset)
       }) catch {
         e => println("Error: \{e}")
       }

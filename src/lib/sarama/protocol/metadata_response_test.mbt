@@ -124,14 +124,14 @@ test "Test metadata response with topics V0" {
     topics: [
       TopicMetadata::{
         version: 0,
-        err: KError(0),
+        err: KErrorCode(0),
         name: "foo",
         uuid: null_uuid,
         is_internal: false,
         partitions: [
           PartitionMetadata::{
             version: 0,
-            err: KError(4),
+            err: KErrorCode(4),
             id: 1,
             leader: 7,
             leader_epoch: 0,
@@ -144,7 +144,7 @@ test "Test metadata response with topics V0" {
       },
       TopicMetadata::{
         version: 0,
-        err: KError(0),
+        err: KErrorCode(0),
         name: "bar",
         uuid: null_uuid,
         is_internal: false,

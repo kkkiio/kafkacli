@@ -32,20 +32,6 @@ pub fn int_to_required_acks(value : Int) -> RequiredAcks raise {
 }
 
 ///|
-/// Response header structure
-pub struct ResponseHeader {
-  length : Int
-  correlation_id : Int
-} derive(Show, ToJson)
-
-///|
-/// Response structure
-pub struct Response {
-  header : ResponseHeader
-  body : &ProtocolBody
-} derive(ToJson)
-
-///|
 /// Produce request structure
 pub struct ProduceRequest {
   transactional_id : String?
@@ -68,23 +54,6 @@ pub fn produce_request_new() -> ProduceRequest {
 }
 
 ///|
-/// Produce response structure
-pub struct ProduceResponse {
-  responses : Map[String, Map[Int, ProducePartitionResponse]]
-  throttle_time_ms : Int?
-} derive(Show, ToJson)
-
-///|
-/// Produce partition response structure
-pub struct ProducePartitionResponse {
-  error : String?
-  offset : Int64
-  timestamp : Int64?
-  log_start_offset : Int64?
-  log_append_time : Int64?
-} derive(Show, ToJson)
-
-///|
 /// Broker metadata structure (compatible with Kafka protocol)
 pub(all) struct BrokerMetadata {
   mut id : Int // Kafka broker ID，对应Go sarama的id字段
@@ -97,7 +66,7 @@ pub(all) struct BrokerMetadata {
 ///|
 /// Join host and port into address string
 pub fn join_host_port(host : String, port : Int) -> String {
-  host + ":" + port.to_string()
+  "\{host}:\{port}"
 }
 
 ///|

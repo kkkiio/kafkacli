@@ -121,25 +121,14 @@ pub struct KafkaClient {
 
 ///|
 /// Create a new Kafka client
-#alias(kafka_client_new)
 pub fn KafkaClient::new(
   conf : @core.Config,
   seed_brokers : Array[String],
 ) -> KafkaClient {
   let brokers : Array[Broker] = []
-  let mut i = 0
-  while i < seed_brokers.length() {
-    match seed_brokers.get(i) {
-      Some(addr) => {
-        let broker = broker_new(i, addr, conf)
-        brokers.push(broker)
-      }
-      None => {
-        let broker = broker_new(-1, "localhost:9092", conf) // Fallback
-        brokers.push(broker)
-      }
-    }
-    i = i + 1
+  for i, addr in seed_brokers {
+    let broker = broker_new(i, addr, conf)
+    brokers.push(broker)
   }
   {
     conf,
@@ -409,9 +398,9 @@ pub fn kafka_client_partition_not_readable(
 
 ///|
 /// Close client (placeholder implementation)
-pub fn kafka_client_close(_client : KafkaClient) -> Result[Unit, String] {
+pub fn kafka_client_close(_client : KafkaClient) -> Unit {
   // TODO: Implement actual client close logic
-  Ok(())
+  ()
 }
 
 ///|

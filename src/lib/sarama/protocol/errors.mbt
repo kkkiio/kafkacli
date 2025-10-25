@@ -232,12 +232,11 @@ impl Show for ConfigurationError with output(self, logger) {
 // See https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ErrorCodes
 
 ///|
-pub(all) suberror KError Int16 derive(ToJson, Eq)
+pub(all) struct KErrorCode(Int16) derive(ToJson, Eq)
 
 ///|
-pub fn KError::int_value(self : KError) -> Int16 {
-  guard self is KError(v)
-  v
+pub fn KErrorCode::int_value(self : KErrorCode) -> Int16 {
+  self.0
 }
 
 // Numeric error codes returned by the Kafka server.
@@ -519,11 +518,10 @@ pub const ErrThrottlingQuotaExceeded : Int16 = 89 // Errors.THROTTLING_QUOTA_EXC
 pub const ErrProducerFenced : Int16 = 90 // Errors.PRODUCER_FENCED
 
 ///|
-pub impl Show for KError with output(self, logger) {
+pub impl Show for KErrorCode with output(self, logger) {
   // Error messages stolen/adapted from
   // https://kafka.apache.org/protocol#protocol_error_codes
-  guard self is KError(v)
-  let msg = match v {
+  let msg = match self.0 {
     ErrNoError => "kafka server: Not an error, why are you printing me?"
     ErrUnknown => "kafka server: Unexpected (unknown?) server error"
     ErrOffsetOutOfRange =>
