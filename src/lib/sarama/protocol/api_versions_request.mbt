@@ -18,13 +18,19 @@ pub impl Encoder for ApiVersionsRequest with encode(self, pe) {
 }
 
 ///|
-pub impl VersionedDecoder for ApiVersionsRequest with decode(self, pd, version) {
-  self.version = version
-  if self.version >= 3 {
-    self.client_software_name = pd.get_compact_string()
-    self.client_software_version = pd.get_compact_string()
+pub fn[T : PacketDecoder] ApiVersionsRequest::decode(
+  pd : T,
+  version : Int16,
+) -> ApiVersionsRequest raise PacketDecodingError {
+  let (client_software_name, client_software_version) = if version >= 3 {
+    let client_software_name = pd.get_compact_string()
+    let client_software_version = pd.get_compact_string()
     ignore(pd.get_empty_tagged_field_array())
+    (client_software_name, client_software_version)
+  } else {
+    ("", "")
   }
+  { version, client_software_name, client_software_version }
 }
 
 ///|
@@ -38,16 +44,17 @@ pub impl ProtocolBody for ApiVersionsRequest with version(self) {
 }
 
 ///|
-pub impl ProtocolBody for ApiVersionsRequest with set_version(self, version) {
-  self.version = version
+pub fn ApiVersionsRequest::header_version(version : Int16) -> Int16 {
+  if version >= 3 {
+    2
+  } else {
+    1
+  }
 }
 
 ///|
-pub impl EncoderWithHeader for ApiVersionsRequest with header_version(self) {
-  if self.version >= 3 {
-    return 2
-  }
-  return 1
+pub impl ProtocolBody for ApiVersionsRequest with header_version(self) {
+  ApiVersionsRequest::header_version(self.version)
 }
 
 ///|

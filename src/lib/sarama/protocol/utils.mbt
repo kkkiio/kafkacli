@@ -17,41 +17,6 @@ pub trait MessageEncoder {
   length(Self) -> Int
 }
 
-// make strings and byte slices encodable for convenience so they can be used as keys
-// and/or values in kafka messages
-
-// StringEncoder implements the Encoder interface for Go strings so that they can be used
-// as the Key or Value in a ProducerMessage.
-
-///|
-pub struct StringEncoder(String)
-
-///|
-pub impl MessageEncoder for StringEncoder with encode(self) {
-  return @encoding/utf8.encode(self.0)
-}
-
-///|
-pub impl MessageEncoder for StringEncoder with length(self) {
-  self.0.length()
-}
-
-// ByteEncoder implements the Encoder interface for Go byte slices so that they can be used
-// as the Key or Value in a ProducerMessage.
-
-///|
-pub struct ByteEncoder(Bytes)
-
-///|
-pub impl MessageEncoder for ByteEncoder with encode(self) {
-  return self.0
-}
-
-///|
-pub impl MessageEncoder for ByteEncoder with length(self) {
-  return self.0.length()
-}
-
 // KafkaVersion instances represent versions of the upstream Kafka broker.
 // it's a struct rather than just typing the array directly to make it opaque and stop people
 // generating their own arbitrary versions

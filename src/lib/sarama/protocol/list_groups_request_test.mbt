@@ -7,6 +7,7 @@ test "ListGroupsRequest v0 - empty body" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     request.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(request.to_json(), decoded.to_json())
 }
@@ -20,6 +21,7 @@ test "ListGroupsRequest v1 - empty body" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     request.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(request.to_json(), decoded.to_json())
 }
@@ -33,6 +35,7 @@ test "ListGroupsRequest v2 - empty body" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     request.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(request.to_json(), decoded.to_json())
 }
@@ -46,6 +49,7 @@ test "ListGroupsRequest v3 - with tagged fields" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     request.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(request.to_json(), decoded.to_json())
 }
@@ -59,6 +63,7 @@ test "ListGroupsRequest v4 - empty states filter" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     request.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(request.to_json(), decoded.to_json())
 }
@@ -73,6 +78,7 @@ test "ListGroupsRequest v4 - with states filter" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     request.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(request.to_json(), decoded.to_json())
 }
@@ -88,6 +94,7 @@ test "ListGroupsRequest v5 - with states and types filter" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     request.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(request.to_json(), decoded.to_json())
 }
@@ -99,6 +106,7 @@ test "ListGroupsRequest roundtrip v0" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     original.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(original.to_json(), decoded.to_json())
 }
@@ -110,6 +118,7 @@ test "ListGroupsRequest roundtrip v3" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     original.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(original.to_json(), decoded.to_json())
 }
@@ -122,6 +131,7 @@ test "ListGroupsRequest roundtrip v4 with filters" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     original.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(original.to_json(), decoded.to_json())
 }
@@ -135,6 +145,7 @@ test "ListGroupsRequest roundtrip v5 with filters" {
   let decoded : @protocol.ListGroupsRequest = decode_only_body(
     bytes,
     original.version(),
+    @protocol.ListGroupsRequest::decode,
   )
   assert_eq(original.to_json(), decoded.to_json())
 }

@@ -9,11 +9,7 @@ pub(all) struct ListGroupsRequest {
 ///|
 /// Create a new list groups request with default version 0
 pub fn ListGroupsRequest::new() -> ListGroupsRequest {
-  {
-    version: 0,
-    states_filter: [],
-    types_filter: [],
-  }
+  { version: 0, states_filter: [], types_filter: [] }
 }
 
 ///|
@@ -63,41 +59,41 @@ pub impl Encoder for ListGroupsRequest with encode(self, pe) {
 
 ///|
 /// Decode list groups request from packet decoder
-pub impl VersionedDecoder for ListGroupsRequest with decode(self, pd, version) {
-  self.version = version
-
+pub fn[T : PacketDecoder] ListGroupsRequest::decode(
+  pd : T,
+  version : Int16,
+) -> ListGroupsRequest raise PacketDecodingError {
   // Decode states filter for versions 4+
-  if self.version >= 4 {
+  let states_filter = Array::new()
+  if version >= 4 {
     let filter_len = pd.get_compact_array_length()
     if filter_len > 0 {
-      self.states_filter = Array::new(capacity=filter_len)
+      states_filter.reserve_capacity(filter_len)
       for _ in 0..<filter_len {
         let filter = pd.get_compact_string()
-        self.states_filter.push(filter)
+        states_filter.push(filter)
       }
-    } else {
-      self.states_filter = []
     }
   }
 
   // Decode types filter for versions 5+
-  if self.version >= 5 {
+  let types_filter = Array::new()
+  if version >= 5 {
     let filter_len = pd.get_compact_array_length()
     if filter_len > 0 {
-      self.types_filter = Array::new(capacity=filter_len)
+      types_filter.reserve_capacity(filter_len)
       for _ in 0..<filter_len {
         let filter = pd.get_compact_string()
-        self.types_filter.push(filter)
+        types_filter.push(filter)
       }
-    } else {
-      self.types_filter = []
     }
   }
 
   // Skip tagged fields for versions 3+
-  if self.version >= 3 {
+  if version >= 3 {
     ignore(pd.get_empty_tagged_field_array())
   }
+  { version, states_filter, types_filter }
 }
 
 ///|
@@ -113,19 +109,19 @@ pub impl ProtocolBody for ListGroupsRequest with version(self) {
 }
 
 ///|
-/// Set version of list groups request
-pub impl ProtocolBody for ListGroupsRequest with set_version(self, version) {
-  self.version = version
-}
-
-///|
 /// Get header version based on request version
-pub impl EncoderWithHeader for ListGroupsRequest with header_version(self) {
-  if self.version >= 3 {
+pub fn ListGroupsRequest::header_version(version : Int16) -> Int16 {
+  if version >= 3 {
     2
   } else {
     1
   }
+}
+
+///|
+/// Get header version based on request version
+pub impl ProtocolBody for ListGroupsRequest with header_version(self) {
+  ListGroupsRequest::header_version(self.version)
 }
 
 ///|

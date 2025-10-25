@@ -120,42 +120,44 @@ pub impl Encoder for MetadataRequest with encode(self, pe) {
 
 ///|
 /// Decode metadata request from packet decoder
-pub impl VersionedDecoder for MetadataRequest with decode(self, pd, version) {
-  self.version = version
-
+pub fn[T : PacketDecoder] MetadataRequest::decode(
+  pd : T,
+  version : Int16,
+) -> MetadataRequest raise PacketDecodingError {
   // Decode topics array based on version
-  if self.version < 9 {
+  let topics = Array::new()
+  if version < 9 {
     // Versions 0-8: regular array decoding
     let size = pd.get_int()
     if size > 0 {
-      self.topics = Array::new(capacity=size)
+      topics.reserve_capacity(size)
       for _ in 0..<size {
         let topic = pd.get_string()
-        self.topics.push(topic)
+        topics.push(topic)
       }
     }
-  } else if self.version == 9 {
+  } else if version == 9 {
     // Version 9: compact array with tagged fields
     let size = pd.get_compact_array_length()
     if size > 0 {
-      self.topics = Array::new(capacity=size)
+      topics.reserve_capacity(size)
     }
     for _ in 0..<size {
       let topic = pd.get_compact_string()
-      self.topics.push(topic)
+      topics.push(topic)
       ignore(pd.get_empty_tagged_field_array())
     }
   } else {
     // Version 10+: compact array with UUID and nullable topic name
     let size = pd.get_compact_array_length()
     if size > 0 {
-      self.topics = Array::new(capacity=size)
+      topics.reserve_capacity(size)
     }
     for _ in 0..<size {
       ignore(pd.get_raw_bytes(16)) // skip UUID
       let topic = pd.get_compact_nullable_string()
       match topic {
-        Some(t) => self.topics.push(t)
+        Some(t) => topics.push(t)
         None => () // handle null topic name
       }
       ignore(pd.get_empty_tagged_field_array())
@@ -163,19 +165,28 @@ pub impl VersionedDecoder for MetadataRequest with decode(self, pd, version) {
   }
 
   // Decode allow_auto_topic_creation for versions 4+
-  if self.version >= 4 {
-    self.allow_auto_topic_creation = pd.get_bool()
+  let allow_auto_topic_creation = if version >= 4 {
+    pd.get_bool()
+  } else {
+    false
   }
 
   // Decode authorization flags for versions 8+
-  if self.version > 7 {
-    self.include_cluster_authorized_operations = pd.get_bool()
-    self.include_topic_authorized_operations = pd.get_bool()
-  }
+  let (
+    include_cluster_authorized_operations,
+    include_topic_authorized_operations,
+  ) = if version > 7 { (pd.get_bool(), pd.get_bool()) } else { (false, false) }
 
   // Skip tagged fields for versions 9+
-  if self.version > 8 {
+  if version > 8 {
     ignore(pd.get_empty_tagged_field_array())
+  }
+  {
+    version,
+    topics,
+    allow_auto_topic_creation,
+    include_cluster_authorized_operations,
+    include_topic_authorized_operations,
   }
 }
 
@@ -192,19 +203,19 @@ pub impl ProtocolBody for MetadataRequest with version(self) {
 }
 
 ///|
-/// Set version of metadata request
-pub impl ProtocolBody for MetadataRequest with set_version(self, version) {
-  self.version = version
-}
-
-///|
 /// Get header version based on request version
-pub impl EncoderWithHeader for MetadataRequest with header_version(self) {
-  if self.version >= 9 {
+pub fn MetadataRequest::header_version(version : Int16) -> Int16 {
+  if version >= 9 {
     2
   } else {
     1
   }
+}
+
+///|
+/// Get header version based on request version
+pub impl ProtocolBody for MetadataRequest with header_version(self) {
+  MetadataRequest::header_version(self.version)
 }
 
 ///|

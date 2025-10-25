@@ -25,7 +25,10 @@ pub async fn api_versions(broker : String) -> Unit {
   }
   let response_bytes = socket.read_exactly(response_size.reinterpret_as_int())
   guard response_bytes is [u32be(_), .. payload]
-  let response = @protocol.ApiVersionsResponse::default()
-  @protocol.versioned_decode(payload, response, body.version)
+  let response = @protocol.versioned_decode(
+    payload,
+    @protocol.ApiVersionsResponse::decode,
+    body.version,
+  )
   println("response: \{response}")
 }

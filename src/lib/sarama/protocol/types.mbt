@@ -120,19 +120,21 @@ pub impl Encoder for BrokerMetadata with encode(self, pe) {
 
 ///|
 /// Decode broker metadata from packet decoder
-pub impl VersionedDecoder for BrokerMetadata with decode(self, pd, version) {
-  self.version = version.to_int()
-  self.id = pd.get_int()
-  self.host = pd.get_string()
-  self.port = pd.get_int()
+pub fn[T : PacketDecoder] BrokerMetadata::decode(
+  pd : T,
+  version : Int16,
+) -> BrokerMetadata raise PacketDecodingError {
+  let version = version.to_int()
+  let id = pd.get_int()
+  let host = pd.get_string()
+  let port = pd.get_int()
 
   // Decode rack for versions 1+
-  if version >= 1 {
-    self.rack = pd.get_nullable_string()
-  }
+  let rack = if version >= 1 { pd.get_nullable_string() } else { None }
 
   // Skip tagged fields for versions 9+
   if version >= 9 {
     ignore(pd.get_empty_tagged_field_array())
   }
+  { version, id, host, port, rack }
 }

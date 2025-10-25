@@ -11,7 +11,11 @@ test "TestMetadataRequestV0" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\x00\\x00\\x00\\x00")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 0,
@@ -28,6 +32,7 @@ test "TestMetadataRequestV0" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_three_topics = MetadataRequest::{
@@ -45,6 +50,7 @@ test "TestMetadataRequestV0" {
   let decoded_three : MetadataRequest = decode_only_body(
     packet_three_topics,
     request_three_topics.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_three_topics.to_json(), decoded_three.to_json())
 }
@@ -60,7 +66,11 @@ test "TestMetadataRequestV1" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\xff\\xff\\xff\\xff")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 1,
@@ -77,6 +87,7 @@ test "TestMetadataRequestV1" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_three_topics = MetadataRequest::{
@@ -94,6 +105,7 @@ test "TestMetadataRequestV1" {
   let decoded_three : MetadataRequest = decode_only_body(
     packet_three_topics,
     request_three_topics.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_three_topics.to_json(), decoded_three.to_json())
 }
@@ -109,7 +121,11 @@ test "TestMetadataRequestV2" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\xff\\xff\\xff\\xff")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 2,
@@ -126,6 +142,7 @@ test "TestMetadataRequestV2" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_three_topics = MetadataRequest::{
@@ -143,6 +160,7 @@ test "TestMetadataRequestV2" {
   let decoded_three : MetadataRequest = decode_only_body(
     packet_three_topics,
     request_three_topics.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_three_topics.to_json(), decoded_three.to_json())
 }
@@ -158,7 +176,11 @@ test "TestMetadataRequestV3" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\xff\\xff\\xff\\xff")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 3,
@@ -175,6 +197,7 @@ test "TestMetadataRequestV3" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_three_topics = MetadataRequest::{
@@ -192,6 +215,7 @@ test "TestMetadataRequestV3" {
   let decoded_three : MetadataRequest = decode_only_body(
     packet_three_topics,
     request_three_topics.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_three_topics.to_json(), decoded_three.to_json())
 }
@@ -207,7 +231,11 @@ test "TestMetadataRequestV4" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 4,
@@ -224,6 +252,7 @@ test "TestMetadataRequestV4" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
@@ -241,6 +270,7 @@ test "TestMetadataRequestV4" {
   let decoded_no_auto : MetadataRequest = decode_only_body(
     packet_no_auto_create,
     request_no_auto_create.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
 }
@@ -256,7 +286,11 @@ test "TestMetadataRequestV5" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 5,
@@ -273,6 +307,7 @@ test "TestMetadataRequestV5" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
@@ -290,6 +325,7 @@ test "TestMetadataRequestV5" {
   let decoded_no_auto : MetadataRequest = decode_only_body(
     packet_no_auto_create,
     request_no_auto_create.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
 }
@@ -305,7 +341,11 @@ test "TestMetadataRequestV6" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 6,
@@ -322,6 +362,7 @@ test "TestMetadataRequestV6" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
@@ -339,6 +380,7 @@ test "TestMetadataRequestV6" {
   let decoded_no_auto : MetadataRequest = decode_only_body(
     packet_no_auto_create,
     request_no_auto_create.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
 }
@@ -354,7 +396,11 @@ test "TestMetadataRequestV7" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 7,
@@ -371,6 +417,7 @@ test "TestMetadataRequestV7" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
@@ -388,6 +435,7 @@ test "TestMetadataRequestV7" {
   let decoded_no_auto : MetadataRequest = decode_only_body(
     packet_no_auto_create,
     request_no_auto_create.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
 }
@@ -403,7 +451,11 @@ test "TestMetadataRequestV8" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\xff\\xff\\xff\\xff\\x00\\x00\\x00")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 8,
@@ -420,6 +472,7 @@ test "TestMetadataRequestV8" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_no_auto_create = MetadataRequest::{
@@ -437,6 +490,7 @@ test "TestMetadataRequestV8" {
   let decoded_no_auto : MetadataRequest = decode_only_body(
     packet_no_auto_create,
     request_no_auto_create.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_no_auto_create.to_json(), decoded_no_auto.to_json())
   let request_auth = MetadataRequest::{
@@ -454,6 +508,7 @@ test "TestMetadataRequestV8" {
   let decoded_auth : MetadataRequest = decode_only_body(
     packet_auth,
     request_auth.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_auth.to_json(), decoded_auth.to_json())
 }
@@ -469,7 +524,11 @@ test "TestMetadataRequestV9" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\x00\\x00\\x00\\x00\\x00")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_one_topic = MetadataRequest::{
     version: 9,
@@ -486,6 +545,7 @@ test "TestMetadataRequestV9" {
   let decoded_one : MetadataRequest = decode_only_body(
     packet_one_topic,
     request_one_topic.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_one_topic.to_json(), decoded_one.to_json())
   let request_auth = MetadataRequest::{
@@ -503,6 +563,7 @@ test "TestMetadataRequestV9" {
   let decoded_auth : MetadataRequest = decode_only_body(
     packet_auth,
     request_auth.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_auth.to_json(), decoded_auth.to_json())
 }
@@ -518,7 +579,11 @@ test "TestMetadataRequestV10" {
   }
   let bytes = encode_only_body(request)
   @json.inspect(bytes, content="\\x00\\x00\\x00\\x00\\x00")
-  let decoded : MetadataRequest = decode_only_body(bytes, request.version())
+  let decoded : MetadataRequest = decode_only_body(
+    bytes,
+    request.version(),
+    MetadataRequest::decode,
+  )
   assert_eq(request.to_json(), decoded.to_json())
   let request_two_topics = MetadataRequest::{
     version: 10,
@@ -535,6 +600,7 @@ test "TestMetadataRequestV10" {
   let decoded_two : MetadataRequest = decode_only_body(
     packet_two_topics,
     request_two_topics.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_two_topics.to_json(), decoded_two.to_json())
   let request_auth = MetadataRequest::{
@@ -552,6 +618,7 @@ test "TestMetadataRequestV10" {
   let decoded_auth : MetadataRequest = decode_only_body(
     packet_auth,
     request_auth.version(),
+    MetadataRequest::decode,
   )
   assert_eq(request_auth.to_json(), decoded_auth.to_json())
 }

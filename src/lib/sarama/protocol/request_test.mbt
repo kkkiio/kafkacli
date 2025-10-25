@@ -7,12 +7,11 @@ fn[T : ProtocolBody] encode_only_body(body : T) -> Bytes raise {
 }
 
 ///|
-fn[T : ProtocolBody + Default] decode_only_body(
+fn[T] decode_only_body(
   body_bytes : Bytes,
   version : Int16,
-) -> T raise {
-  let pd = RealDecoder::new(body_bytes)
-  let body = T::default()
-  body.decode(pd, version)
-  return body
+  decode_fn : (&PacketDecoder, Int16) -> T raise PacketDecodingError,
+) -> T raise PacketDecodingError {
+  let pd = RealDecoder::new(body_bytes[:])
+  decode_fn(pd, version)
 }

@@ -1,10 +1,13 @@
 ///|
 test "TestApiVersionsResponse" {
-  let response = ApiVersionsResponse::default()
   let apiVersionResponse : Bytes = [
     0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x00, 0x02, 0x00, 0x01,
   ]
-  versioned_decode(apiVersionResponse, response, 0)
+  let response = versioned_decode(
+    apiVersionResponse,
+    ApiVersionsResponse::decode,
+    0,
+  )
   @json.inspect(response, content={
     "version": 0,
     "error_code": 0,
@@ -17,8 +20,6 @@ test "TestApiVersionsResponse" {
 
 ///|
 test "TestApiVersionsResponseV3" {
-  let response = ApiVersionsResponse::default()
-  response.version = 3
   let apiVersionResponseV3 : Bytes = [
     0x00, 0x00, // no error
      0x02, // compact array length 1
@@ -26,7 +27,11 @@ test "TestApiVersionsResponseV3" {
      0x00, 0x00, 0x00, 0x00, // throttle time
      0x01, 0x01, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // tagged fields (empty SupportedFeatures)
   ]
-  versioned_decode(apiVersionResponseV3, response, 3)
+  let response = versioned_decode(
+    apiVersionResponseV3,
+    ApiVersionsResponse::decode,
+    3,
+  )
   @json.inspect(response, content={
     "version": 3,
     "error_code": 0,

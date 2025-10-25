@@ -59,44 +59,47 @@ pub impl Encoder for PartitionMetadata with encode(self, pe) {
 
 ///|
 /// Decode partition metadata from packet decoder
-pub impl VersionedDecoder for PartitionMetadata with decode(self, pd, version) {
-  self.version = version
-  self.err = KError(pd.get_int16())
-  self.id = pd.get_int()
-  self.leader = pd.get_int()
+pub fn[T : PacketDecoder] PartitionMetadata::decode(
+  pd : T,
+  version : Int16,
+) -> PartitionMetadata raise PacketDecodingError {
+  let err = KError(pd.get_int16())
+  let id = pd.get_int()
+  let leader = pd.get_int()
 
   // Decode leader epoch for versions 7+
-  if self.version >= 7 {
-    self.leader_epoch = pd.get_int()
-  }
+  let leader_epoch = if version >= 7 { pd.get_int() } else { 0 }
 
   // Decode replicas array
-  if self.version < 9 {
-    self.replicas = pd.get_int_array()
+  let replicas = if version < 9 {
+    pd.get_int_array()
   } else {
-    self.replicas = pd.get_compact_int_array()
+    pd.get_compact_int_array()
   }
 
   // Decode ISR array
-  if self.version < 9 {
-    self.isr = pd.get_int_array()
+  let isr = if version < 9 {
+    pd.get_int_array()
   } else {
-    self.isr = pd.get_compact_int_array()
+    pd.get_compact_int_array()
   }
 
   // Decode offline replicas for versions 5+
-  if self.version >= 5 {
-    if self.version < 9 {
-      self.offline_replicas = pd.get_int_array()
+  let offline_replicas = if version >= 5 {
+    if version < 9 {
+      pd.get_int_array()
     } else {
-      self.offline_replicas = pd.get_compact_int_array()
+      pd.get_compact_int_array()
     }
+  } else {
+    Array::new()
   }
 
   // Skip tagged fields for versions 9+
-  if self.version >= 9 {
+  if version >= 9 {
     ignore(pd.get_empty_tagged_field_array())
   }
+  { version, err, id, leader, leader_epoch, replicas, isr, offline_replicas }
 }
 
 ///|
@@ -168,63 +171,59 @@ pub impl Encoder for TopicMetadata with encode(self, pe) {
 
 ///|
 /// Decode topic metadata from packet decoder
-pub impl VersionedDecoder for TopicMetadata with decode(self, pd, version) {
-  self.version = version
-  self.err = KError(pd.get_int16())
+pub fn[T : PacketDecoder] TopicMetadata::decode(
+  pd : T,
+  version : Int16,
+) -> TopicMetadata raise PacketDecodingError {
+  let err = KError(pd.get_int16())
 
   // Decode topic name
-  if self.version < 9 {
-    self.name = pd.get_string()
-  } else {
-    self.name = pd.get_compact_string()
-  }
+  let name = if version < 9 { pd.get_string() } else { pd.get_compact_string() }
 
   // Decode UUID for versions 10+
-  if self.version >= 10 {
+  let uuid = if version >= 10 {
     let uuid_bytes = pd.get_raw_bytes(16)
-    self.uuid = (uuid_bytes.to_bytes() |> @uuid.from_bytes) catch {
+    (uuid_bytes.to_bytes() |> @uuid.from_bytes) catch {
       e =>
         raise PacketDecodingError("invalid UUID bytes in topic metadata: \{e}")
     }
+  } else {
+    null_uuid
   }
 
   // Decode is_internal flag for versions 1+
-  if self.version >= 1 {
-    self.is_internal = pd.get_bool()
-  }
+  let is_internal = if version >= 1 { pd.get_bool() } else { false }
 
   // Decode partitions array
-  let partition_count = if self.version < 9 {
+  let partition_count = if version < 9 {
     pd.get_array_length()
   } else {
     pd.get_compact_array_length()
   }
+  let partitions = []
   if partition_count > 0 {
-    self.partitions = Array::new(capacity=partition_count)
+    partitions.reserve_capacity(partition_count)
     for _ in 0..<partition_count {
-      let partition = PartitionMetadata::{
-        version: self.version,
-        err: KError(0),
-        id: 0,
-        leader: 0,
-        leader_epoch: 0,
-        replicas: Array::new(),
-        isr: Array::new(),
-        offline_replicas: Array::new(),
-      }
-      partition.decode(pd, self.version)
-      self.partitions.push(partition)
+      let partition = PartitionMetadata::decode(pd, version)
+      partitions.push(partition)
     }
   }
 
   // Decode authorized operations for versions 8+
-  if self.version >= 8 {
-    self.topic_authorized_operations = pd.get_int()
-  }
+  let topic_authorized_operations = if version >= 8 { pd.get_int() } else { 0 }
 
   // Skip tagged fields for versions 9+
-  if self.version >= 9 {
+  if version >= 9 {
     ignore(pd.get_empty_tagged_field_array())
+  }
+  {
+    version,
+    err,
+    name,
+    uuid,
+    is_internal,
+    partitions,
+    topic_authorized_operations,
   }
 }
 
@@ -253,14 +252,8 @@ pub impl ProtocolBody for MetadataResponse with version(self) {
 }
 
 ///|
-/// Set version of metadata response
-pub impl ProtocolBody for MetadataResponse with set_version(self, version) {
-  self.version = version
-}
-
-///|
 /// Get header version based on response version
-pub impl EncoderWithHeader for MetadataResponse with header_version(self) {
+pub impl ProtocolBody for MetadataResponse with header_version(self) {
   if self.version >= 9 {
     1
   } else {
@@ -347,79 +340,76 @@ pub impl Encoder for MetadataResponse with encode(self, pe) {
 
 ///|
 /// Decode metadata response from packet decoder
-pub impl VersionedDecoder for MetadataResponse with decode(self, pd, version) {
-  self.version = version
+pub fn[T : PacketDecoder] MetadataResponse::decode(
+  pd : T,
+  version : Int16,
+) -> MetadataResponse raise PacketDecodingError {
 
   // Decode throttle time for versions 3+
-  if self.version >= 3 {
-    self.throttle_time_ms = pd.get_int()
-  }
+  let throttle_time_ms = if version >= 3 { pd.get_int() } else { 0 }
 
   // Decode brokers array
-  let broker_count = if self.version < 9 {
+  let broker_count = if version < 9 {
     pd.get_array_length()
   } else {
     pd.get_compact_array_length()
   }
+  let brokers = []
   if broker_count > 0 {
-    self.brokers = Array::new(capacity=broker_count)
+    brokers.reserve_capacity(broker_count)
     for _ in 0..<broker_count {
-      let broker = BrokerMetadata::{
-        id: 0,
-        host: "",
-        port: 0,
-        rack: None,
-        version: 0,
-      }
-      broker.decode(pd, self.version)
-      self.brokers.push(broker)
+      let broker = BrokerMetadata::decode(pd, version)
+      brokers.push(broker)
     }
   }
 
   // Decode cluster ID for versions 2+
-  if self.version >= 2 {
-    if self.version < 9 {
-      self.cluster_id = pd.get_nullable_string()
+  let cluster_id = if version >= 2 {
+    if version < 9 {
+      pd.get_nullable_string()
     } else {
-      self.cluster_id = pd.get_compact_nullable_string()
+      pd.get_compact_nullable_string()
     }
+  } else {
+    None
   }
 
   // Decode controller ID for versions 1+
-  if self.version >= 1 {
-    self.controller_id = pd.get_int()
-  }
+  let controller_id = if version >= 1 { pd.get_int() } else { 0 }
 
   // Decode topics array
-  let topic_count = if self.version < 9 {
+  let topic_count = if version < 9 {
     pd.get_array_length()
   } else {
     pd.get_compact_array_length()
   }
+  let topics = []
   if topic_count > 0 {
-    self.topics = Array::new(capacity=topic_count)
+    topics.reserve_capacity(topic_count)
     for _ in 0..<topic_count {
-      let topic = TopicMetadata::{
-        version: self.version,
-        err: KError(0),
-        name: "",
-        uuid: null_uuid,
-        is_internal: false,
-        partitions: Array::new(),
-        topic_authorized_operations: 0,
-      }
-      topic.decode(pd, self.version)
-      self.topics.push(topic)
+      let topic = TopicMetadata::decode(pd, version)
+      topics.push(topic)
     }
   }
 
   // Decode cluster authorized operations for versions 8+
-  if self.version >= 8 {
-    self.cluster_authorized_operations = pd.get_int()
+  let cluster_authorized_operations = if version >= 8 {
+    pd.get_int()
+  } else {
+    0
   }
 
   // Skip tagged fields for versions 9+
-  if self.version >= 9 {
+  if version >= 9 {
     ignore(pd.get_empty_tagged_field_array())
+  }
+  {
+    version,
+    throttle_time_ms,
+    brokers,
+    cluster_id,
+    controller_id,
+    topics,
+    cluster_authorized_operations,
   }
 }

@@ -82,9 +82,8 @@ pub fn FetchResponseBlock::encode(
 
 ///|
 /// Decode fetch response block from packet decoder
-pub fn FetchResponseBlock::decode(
-  self : Self,
-  pd : &PacketDecoder,
+pub fn[T : PacketDecoder] FetchResponseBlock::decode(
+  pd : T,
   version : Int16,
 ) -> Self raise PacketDecodingError {
   let error = pd.get_int16()
@@ -267,20 +266,21 @@ pub impl Encoder for FetchResponse with encode(self, pe) {
 
 ///|
 /// Decode fetch response from packet decoder
-pub impl VersionedDecoder for FetchResponse with decode(self, pd, version) raise PacketDecodingError {
-  self.version = version
-  if version >= 1 {
-    self.throttle_time_ms = pd.get_int()
-  }
-  if version >= 7 {
-    self.error_code = pd.get_int16()
-    self.session_id = pd.get_int()
+pub fn[T : PacketDecoder] FetchResponse::decode(
+  pd : T,
+  version : Int16,
+) -> FetchResponse raise PacketDecodingError {
+  let throttle_time_ms = if version >= 1 { pd.get_int() } else { 0 }
+  let (error_code, session_id) = if version >= 7 {
+    (pd.get_int16(), pd.get_int())
+  } else {
+    (0, 0)
   }
 
   // Decode blocks
   let topic_count = pd.get_array_length()
+  let blocks = Map::new()
   if topic_count > 0 {
-    self.blocks = Map::new()
     for _ in 0..<topic_count {
       let topic = pd.get_string()
       let partition_count = pd.get_array_length()
@@ -288,12 +288,13 @@ pub impl VersionedDecoder for FetchResponse with decode(self, pd, version) raise
       for _ in 0..<partition_count {
         let partition_id = pd.get_int()
         let block = FetchResponseBlock::new()
-        let decoded_block = block.decode(pd, version)
+        let decoded_block = FetchResponseBlock::decode(pd, version)
         partitions[partition_id] = decoded_block
       }
-      self.blocks[topic] = partitions
+      blocks[topic] = partitions
     }
   }
+  { version, throttle_time_ms, error_code, session_id, blocks }
 }
 
 ///|
@@ -309,15 +310,14 @@ pub impl ProtocolBody for FetchResponse with version(self) {
 }
 
 ///|
-/// Set version of fetch response
-pub impl ProtocolBody for FetchResponse with set_version(self, version) {
-  self.version = version
+/// Get header version based on response version
+pub fn FetchResponse::header_version() -> Int16 {
+  0 // Fetch response always uses header version 0
 }
 
 ///|
-/// Get header version based on response version
-pub impl EncoderWithHeader for FetchResponse with header_version(self) {
-  0 // Fetch response always uses header version 0
+pub impl ProtocolBody for FetchResponse with header_version(_) {
+  FetchResponse::header_version()
 }
 
 ///|

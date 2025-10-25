@@ -89,16 +89,16 @@ pub fn FetchRequestBlock::decode(
 ///|
 /// Main fetch request structure
 pub(all) struct FetchRequest {
-  mut version : Int16
-  mut max_wait_time : Int
-  mut min_bytes : Int
-  mut max_bytes : Int
-  mut isolation_level : IsolationLevel
-  mut session_id : Int
-  mut session_epoch : Int
-  mut blocks : Map[String, Map[Int, FetchRequestBlock]]
+  version : Int16
+  max_wait_time : Int
+  min_bytes : Int
+  max_bytes : Int
+  isolation_level : IsolationLevel
+  session_id : Int
+  session_epoch : Int
+  blocks : Map[String, Map[Int, FetchRequestBlock]]
   mut forgotten : Map[String, Array[Int]]
-  mut rack_id : String
+  rack_id : String
 } derive(Show, ToJson)
 
 ///|
@@ -126,9 +126,7 @@ pub fn FetchRequest::new() -> FetchRequest {
 ///|
 /// Create a new fetch request with specified version
 pub fn FetchRequest::with_version(version : Int16) -> FetchRequest {
-  let request = FetchRequest::new()
-  request.version = version
-  request
+  { ..FetchRequest::default(), version, }
 }
 
 ///|
@@ -213,29 +211,33 @@ pub impl Encoder for FetchRequest with encode(self, pe) {
 
 ///|
 /// Decode fetch request from packet decoder
-pub impl VersionedDecoder for FetchRequest with decode(self, pd, version) raise {
-  self.version = version
+pub fn FetchRequest::decode(
+  pd : &PacketDecoder,
+  version : Int16,
+) -> FetchRequest raise PacketDecodingError {
+  // let req = FetchRequest::with_version(version)
 
   // Skip replica_id (always -1 for clients)
   ignore(pd.get_int())
-  self.max_wait_time = pd.get_int()
-  self.min_bytes = pd.get_int()
-  if version >= 3 {
-    self.max_bytes = pd.get_int()
-  }
-  if version >= 4 {
+  let max_wait_time = pd.get_int()
+  let min_bytes = pd.get_int()
+  let max_bytes = if version >= 3 { pd.get_int() } else { 0 }
+  let isolation_level = if version >= 4 {
     let isolation = pd.get_byte().to_int()
-    self.isolation_level = int_to_isolation_level(isolation)
+    int_to_isolation_level(isolation)
+  } else {
+    ReadUncommitted
   }
-  if version >= 7 {
-    self.session_id = pd.get_int()
-    self.session_epoch = pd.get_int()
+  let (session_id, session_epoch) = if version >= 7 {
+    (pd.get_int(), pd.get_int())
+  } else {
+    (0, 0)
   }
 
   // Decode blocks
   let topic_count = pd.get_array_length()
+  let blocks = Map::new()
   if topic_count > 0 {
-    self.blocks = Map::new()
     for _ in 0..<topic_count {
       let topic = pd.get_string()
       let partition_count = pd.get_array_length()
@@ -246,14 +248,14 @@ pub impl VersionedDecoder for FetchRequest with decode(self, pd, version) raise 
         let decoded_block = block.decode(pd, version)
         partitions[partition_id] = decoded_block
       }
-      self.blocks[topic] = partitions
+      blocks[topic] = partitions
     }
   }
+  let forgotten = Map::new()
   if version >= 7 {
     // Decode forgotten partitions
     let forgotten_count = pd.get_array_length()
     if forgotten_count > 0 {
-      self.forgotten = Map::new()
       for _ in 0..<forgotten_count {
         let topic = pd.get_string()
         let partition_count = pd.get_array_length()
@@ -261,12 +263,22 @@ pub impl VersionedDecoder for FetchRequest with decode(self, pd, version) raise 
         for _ in 0..<partition_count {
           partitions.push(pd.get_int())
         }
-        self.forgotten[topic] = partitions
+        forgotten[topic] = partitions
       }
     }
   }
-  if version >= 11 {
-    self.rack_id = pd.get_string()
+  let rack_id = if version >= 11 { pd.get_string() } else { "" }
+  {
+    version,
+    max_wait_time,
+    min_bytes,
+    max_bytes,
+    isolation_level,
+    session_id,
+    session_epoch,
+    blocks,
+    forgotten,
+    rack_id,
   }
 }
 
@@ -283,15 +295,14 @@ pub impl ProtocolBody for FetchRequest with version(self) {
 }
 
 ///|
-/// Set version of fetch request
-pub impl ProtocolBody for FetchRequest with set_version(self, version) {
-  self.version = version
+/// Get header version based on request version
+pub fn FetchRequest::header_version() -> Int16 {
+  1 // Fetch request always uses header version 1
 }
 
 ///|
-/// Get header version based on request version
-pub impl EncoderWithHeader for FetchRequest with header_version(self) {
-  1 // Fetch request always uses header version 1
+pub impl ProtocolBody for FetchRequest with header_version(self) {
+  FetchRequest::header_version()
 }
 
 ///|

@@ -2,9 +2,12 @@
 test "ListGroupsResponse v0 - empty groups" {
   let response = @protocol.ListGroupsResponse::with_version(0)
   let encoded = @protocol.encode(response)
-  inspect(encoded, content=(
-    #|b"\x00\x00\x00\x00\x00\x00"
-  )) // error code (0) + array length (0)
+  inspect(
+    encoded,
+    content=(
+      #|b"\x00\x00\x00\x00\x00\x00"
+    ),
+  ) // error code (0) + array length (0)
 }
 
 ///|
@@ -12,9 +15,12 @@ test "ListGroupsResponse v0 - with error" {
   let response = @protocol.ListGroupsResponse::with_version(0)
   response.error = @protocol.ErrClusterAuthorizationFailed
   let encoded = @protocol.encode(response)
-  inspect(encoded, content=(
-    #|b"\x00\x1f\x00\x00\x00\x00"
-  )) // error code (31) + array length (0)
+  inspect(
+    encoded,
+    content=(
+      #|b"\x00\x1f\x00\x00\x00\x00"
+    ),
+  ) // error code (31) + array length (0)
 }
 
 ///|
@@ -22,9 +28,12 @@ test "ListGroupsResponse v0 - with consumer group" {
   let response = @protocol.ListGroupsResponse::with_version(0)
   response.add_group("foo", "consumer")
   let encoded = @protocol.encode(response)
-  inspect(encoded, content=(
-    #|b"\x00\x00\x00\x00\x00\x01\x00\x03foo\x00\x08consumer"
-  )) // error (0) + array length (1) + group data
+  inspect(
+    encoded,
+    content=(
+      #|b"\x00\x00\x00\x00\x00\x01\x00\x03foo\x00\x08consumer"
+    ),
+  ) // error (0) + array length (1) + group data
 }
 
 ///|
@@ -36,8 +45,10 @@ test "ListGroupsResponse v4 - with group state" {
   let encoded = @protocol.encode(response)
   inspect(
     encoded,
-  content=(#|b"\x00\x00\x00\x00\x00\x00\x02\x04foo\x09consumer\x06Empty\x00\x00"
-  )) // throttle (0) + error (0) + compact array + group + state + tagged fields
+    content=(
+      #|b"\x00\x00\x00\x00\x00\x00\x02\x04foo\x09consumer\x06Empty\x00\x00"
+    ),
+  ) // throttle (0) + error (0) + compact array + group + state + tagged fields
 }
 
 ///|
@@ -50,16 +61,21 @@ test "ListGroupsResponse v5 - with group state and type" {
   let encoded = @protocol.encode(response)
   inspect(
     encoded,
-  content=(#|b"\x00\x00\x00\x00\x00\x00\x02\x04foo\x09consumer\x06Empty\x08Classic\x00\x00"
-  )) // throttle (0) + error (0) + compact array + group + state + type + tagged fields
+    content=(
+      #|b"\x00\x00\x00\x00\x00\x00\x02\x04foo\x09consumer\x06Empty\x08Classic\x00\x00"
+    ),
+  ) // throttle (0) + error (0) + compact array + group + state + type + tagged fields
 }
 
 ///|
 test "ListGroupsResponse roundtrip v0 empty" {
   let original = @protocol.ListGroupsResponse::with_version(0)
   let encoded = @protocol.encode(original)
-  let decoded = @protocol.ListGroupsResponse::new()
-  @protocol.versioned_decode(encoded, decoded, 0)
+  let decoded = @protocol.versioned_decode(
+    encoded,
+    ListGroupsResponse::decode,
+    0,
+  )
   @json.inspect(decoded, content={
     "version": 0,
     "throttle_time_ms": 0,
@@ -75,8 +91,11 @@ test "ListGroupsResponse roundtrip v0 with groups" {
   original.add_group("foo", "consumer")
   original.add_group("bar", "connect")
   let encoded = @protocol.encode(original)
-  let decoded = @protocol.ListGroupsResponse::new()
-  @protocol.versioned_decode(encoded, decoded, 0)
+  let decoded = @protocol.versioned_decode(
+    encoded,
+    ListGroupsResponse::decode,
+    0,
+  )
   @json.inspect(decoded, content={
     "version": 0,
     "throttle_time_ms": 0,
@@ -92,8 +111,11 @@ test "ListGroupsResponse roundtrip v1 with throttle" {
   original.throttle_time_ms = 100
   original.add_group("test", "consumer")
   let encoded = @protocol.encode(original)
-  let decoded = @protocol.ListGroupsResponse::new()
-  @protocol.versioned_decode(encoded, decoded, 1)
+  let decoded = @protocol.versioned_decode(
+    encoded,
+    ListGroupsResponse::decode,
+    1,
+  )
   @json.inspect(decoded, content={
     "version": 1,
     "throttle_time_ms": 100,
@@ -113,8 +135,11 @@ test "ListGroupsResponse roundtrip v4 with extended data" {
   original.add_group_with_data("group1", "consumer", group_data1)
   original.add_group_with_data("group2", "connect", group_data2)
   let encoded = @protocol.encode(original)
-  let decoded = @protocol.ListGroupsResponse::new()
-  @protocol.versioned_decode(encoded, decoded, 4)
+  let decoded = @protocol.versioned_decode(
+    encoded,
+    ListGroupsResponse::decode,
+    4,
+  )
   @json.inspect(decoded, content={
     "version": 4,
     "throttle_time_ms": 0,
@@ -136,8 +161,11 @@ test "ListGroupsResponse roundtrip v5 with full data" {
   original.add_group_with_data("my-group", "consumer", group_data)
   original.throttle_time_ms = 50
   let encoded = @protocol.encode(original)
-  let decoded = @protocol.ListGroupsResponse::new()
-  @protocol.versioned_decode(encoded, decoded, 5)
+  let decoded = @protocol.versioned_decode(
+    encoded,
+    ListGroupsResponse::decode,
+    5,
+  )
   @json.inspect(decoded, content={
     "version": 5,
     "throttle_time_ms": 50,
@@ -155,8 +183,11 @@ test "ListGroupsResponse with error roundtrip" {
   original.error = @protocol.ErrNotCoordinatorForConsumer
   original.throttle_time_ms = 200
   let encoded = @protocol.encode(original)
-  let decoded = @protocol.ListGroupsResponse::new()
-  @protocol.versioned_decode(encoded, decoded, 2)
+  let decoded = @protocol.versioned_decode(
+    encoded,
+    ListGroupsResponse::decode,
+    2,
+  )
   @json.inspect(decoded, content={
     "version": 2,
     "throttle_time_ms": 200,

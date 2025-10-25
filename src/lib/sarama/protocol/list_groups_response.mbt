@@ -124,30 +124,28 @@ pub impl Encoder for ListGroupsResponse with encode(self, pe) {
 
 ///|
 /// Decode list groups response from packet decoder
-pub impl VersionedDecoder for ListGroupsResponse with decode(self, pd, version) {
-  self.version = version
+pub fn[T : PacketDecoder] ListGroupsResponse::decode(
+  pd : T,
+  version : Int16,
+) -> ListGroupsResponse raise PacketDecodingError {
 
   // Decode throttle time for versions 1+
-  if self.version >= 1 {
-    self.throttle_time_ms = pd.get_int()
-  }
+  let throttle_time_ms = if version >= 1 { pd.get_int() } else { 0 }
 
   // Decode error code
-  self.error = pd.get_int16()
+  let error = pd.get_int16()
 
   // Decode groups
-  let group_count = if self.version <= 2 {
+  let group_count = if version <= 2 {
     pd.get_array_length()
   } else {
     pd.get_compact_array_length()
   }
+  let groups = Map::new()
+  let groups_data = Map::new()
   if group_count > 0 {
-    self.groups = Map::new()
-    if self.version >= 4 {
-      self.groups_data = Map::new()
-    }
     for _ in 0..<group_count {
-      let (group_id, protocol_type) = if self.version <= 2 {
+      let (group_id, protocol_type) = if version <= 2 {
         let group_id = pd.get_string()
         let protocol_type = pd.get_string()
         (group_id, protocol_type)
@@ -156,31 +154,28 @@ pub impl VersionedDecoder for ListGroupsResponse with decode(self, pd, version) 
         let protocol_type = pd.get_compact_string()
         (group_id, protocol_type)
       }
-      self.groups[group_id] = protocol_type
+      groups[group_id] = protocol_type
 
       // Decode extended data for versions 4+
-      if self.version >= 4 {
+      if version >= 4 {
         let group_state = pd.get_compact_string()
-        let group_type = if self.version >= 5 {
-          pd.get_compact_string()
-        } else {
-          ""
-        }
+        let group_type = if version >= 5 { pd.get_compact_string() } else { "" }
         let group_data = { group_state, group_type }
-        self.groups_data[group_id] = group_data
+        groups_data[group_id] = group_data
       }
 
       // Skip tagged fields for each group in versions 3+
-      if self.version >= 3 {
+      if version >= 3 {
         ignore(pd.get_empty_tagged_field_array())
       }
     }
   }
 
   // Skip top-level tagged fields for versions 3+
-  if self.version >= 3 {
+  if version >= 3 {
     ignore(pd.get_empty_tagged_field_array())
   }
+  { version, throttle_time_ms, error, groups, groups_data }
 }
 
 ///|
@@ -196,19 +191,18 @@ pub impl ProtocolBody for ListGroupsResponse with version(self) {
 }
 
 ///|
-/// Set version of list groups response
-pub impl ProtocolBody for ListGroupsResponse with set_version(self, version) {
-  self.version = version
-}
-
-///|
-/// Get header version based on response version
-pub impl EncoderWithHeader for ListGroupsResponse with header_version(self) {
-  if self.version >= 3 {
+pub fn ListGroupsResponse::header_version(version : Int16) -> Int16 {
+  if version >= 3 {
     1
   } else {
     0
   }
+}
+
+///|
+/// Get header version based on response version
+pub impl ProtocolBody for ListGroupsResponse with header_version(self) {
+  ListGroupsResponse::header_version(self.version)
 }
 
 ///|

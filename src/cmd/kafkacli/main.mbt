@@ -1,7 +1,6 @@
 ///|
 fn main {
   let argv = @sys.get_cli_args()
-  println(argv)
   // implement subcommands manually because ArgParser doesn't support subcommands yet
   let usage =
     #| Kafka CLI tool

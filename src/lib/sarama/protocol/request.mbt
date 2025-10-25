@@ -1,8 +1,8 @@
 ///|
-pub trait ProtocolBody: EncoderWithHeader + VersionedDecoder + ToJson {
+pub trait ProtocolBody: Encoder + ToJson {
   key(Self) -> Int16
   version(Self) -> Int16
-  set_version(Self, Int16) -> Unit
+  header_version(Self) -> Int16
   is_valid_version(Self) -> Bool
   required_version(Self) -> KafkaVersion
 }
@@ -40,14 +40,14 @@ pub fn Request::decode(
   let version = pd.get_int16()
   let correlation_id = pd.get_int()
   let client_id = pd.get_string()
-  guard allocate_body(key, version) is Some(body) else {
+  guard allocate_body(key, version) is Some((header_version, decode_fn)) else {
     raise PacketDecodingError("unknown request key (\{key})")
   }
-  if body.header_version() >= 2 {
+  if header_version >= 2 {
     // tagged field
     ignore(pd.get_uvarint())
   }
-  VersionedDecoder::decode(body, pd, version)
+  let body = decode_fn(pd, version)
   { correlation_id, client_id, body }
 }
 
@@ -69,19 +69,30 @@ pub async fn decode_request(
 }
 
 ///|
-pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
-  let body : ProtocolBodyAdapter = match key {
+pub fn allocate_body(
+  key : Int16,
+  version : Int16,
+) -> (
+  Int16,
+  (&PacketDecoder, Int16) -> ProtocolBodyAdapter raise PacketDecodingError,
+)? {
+  let res = match key {
     // apiKeyProduce => ProduceRequest::new(version)
-    ApiKeyFetch => Fetch(FetchRequest::with_version(version))
+    ApiKeyFetch =>
+      (
+        FetchRequest::header_version(),
+        fn(pd, version) raise PacketDecodingError {
+          Fetch(FetchRequest::decode(pd, version))
+        },
+      )
     // apiKeyListOffsets => OffsetRequest::new(version)
     ApiKeyMetadata =>
-      Metadata(MetadataRequest::{
-        version,
-        topics: [],
-        allow_auto_topic_creation: false,
-        include_cluster_authorized_operations: false,
-        include_topic_authorized_operations: false,
-      })
+      (
+        MetadataRequest::header_version(version),
+        fn(pd, version) raise PacketDecodingError {
+          Metadata(MetadataRequest::decode(pd, version))
+        },
+      )
     // 4: LeaderAndIsrRequest
     // 5: StopReplicaRequest
     // 6: UpdateMetadataRequest
@@ -94,13 +105,21 @@ pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
     // apiKeyLeaveGroup => LeaveGroupRequest::new(version)
     // apiKeySyncGroup => SyncGroupRequest::new(version)
     // apiKeyDescribeGroups => DescribeGroupsRequest::new(version)
-    ApiKeyListGroups => ListGroups(ListGroupsRequest::with_version(version))
+    ApiKeyListGroups =>
+      (
+        ListGroupsRequest::header_version(version),
+        fn(pd, version) raise PacketDecodingError {
+          ListGroups(ListGroupsRequest::decode(pd, version))
+        },
+      )
     // apiKeySaslHandshake => SaslHandshakeRequest::new(version)
     ApiKeyApiVersions =>
-      ApiVersions(ApiVersionsRequest::{
-        ..ApiVersionsRequest::default(),
-        version,
-      })
+      (
+        ApiVersionsRequest::header_version(version),
+        fn(pd, version) raise PacketDecodingError {
+          ApiVersions(ApiVersionsRequest::decode(pd, version))
+        },
+      )
     // apiKeyCreateTopics => CreateTopicsRequest::new(version)
     // apiKeyDeleteTopics => DeleteTopicsRequest::new(version)
     // apiKeyDeleteRecords => DeleteRecordsRequest::new(version)
@@ -158,7 +177,7 @@ pub fn allocate_body(key : Int16, version : Int16) -> ProtocolBodyAdapter? {
     // 68: ConsumerGroupHeartbeatRequest
     _ => return None
   }
-  Some(body)
+  Some(res)
 }
 
 ///|
@@ -193,24 +212,13 @@ pub impl ProtocolBody for ProtocolBodyAdapter with version(self) {
 }
 
 ///|
-pub impl ProtocolBody for ProtocolBodyAdapter with set_version(self, version) {
+pub impl ProtocolBody for ProtocolBodyAdapter with header_version(self) {
   match self {
-    ApiVersions(body) => body.set_version(version)
-    Metadata(body) => body.set_version(version)
-    Fetch(body) => body.set_version(version)
-    ListGroups(body) => body.set_version(version)
-    ListGroupsResponse(body) => body.set_version(version)
-  }
-}
-
-///|
-pub impl EncoderWithHeader for ProtocolBodyAdapter with header_version(self) {
-  match self {
-    ApiVersions(body) => body.header_version()
-    Metadata(body) => body.header_version()
-    Fetch(body) => body.header_version()
-    ListGroups(body) => body.header_version()
-    ListGroupsResponse(body) => body.header_version()
+    ApiVersions(body) => ProtocolBody::header_version(body)
+    Metadata(body) => ProtocolBody::header_version(body)
+    Fetch(body) => ProtocolBody::header_version(body)
+    ListGroups(body) => ProtocolBody::header_version(body)
+    ListGroupsResponse(body) => ProtocolBody::header_version(body)
   }
 }
 
@@ -233,17 +241,6 @@ pub impl ProtocolBody for ProtocolBodyAdapter with required_version(self) {
     Fetch(body) => body.required_version()
     ListGroups(body) => body.required_version()
     ListGroupsResponse(body) => body.required_version()
-  }
-}
-
-///|
-pub impl VersionedDecoder for ProtocolBodyAdapter with decode(self, pd, version) {
-  match self {
-    ApiVersions(body) => body.decode(pd, version)
-    Metadata(body) => body.decode(pd, version)
-    Fetch(body) => body.decode(pd, version)
-    ListGroups(body) => body.decode(pd, version)
-    ListGroupsResponse(body) => body.decode(pd, version)
   }
 }
 

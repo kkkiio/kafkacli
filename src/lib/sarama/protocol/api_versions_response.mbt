@@ -27,18 +27,17 @@ pub fn[E : PacketEncoder] ApiVersionsResponseKey::encode(
 }
 
 ///|
-pub impl VersionedDecoder for ApiVersionsResponseKey with decode(
-  self,
-  pd,
-  version,
-) {
-  self.version = version
-  self.api_key = pd.get_int16()
-  self.min_version = pd.get_int16()
-  self.max_version = pd.get_int16()
+pub fn[T : PacketDecoder] ApiVersionsResponseKey::decode(
+  pd : T,
+  version : Int16,
+) -> ApiVersionsResponseKey raise PacketDecodingError {
+  let api_key = pd.get_int16()
+  let min_version = pd.get_int16()
+  let max_version = pd.get_int16()
   if version >= 3 {
     pd.get_empty_tagged_field_array() |> ignore
   }
+  { version, api_key, min_version, max_version }
 }
 
 ///|
@@ -52,11 +51,6 @@ pub(all) struct ApiVersionsResponse {
   /// ThrottleTimeMs contains the duration in milliseconds for which the request was throttled due to a quota violation, or zero if the request did not violate any quota.
   mut throttle_time_ms : Int
 } derive(Show, Default, ToJson)
-
-///|
-pub impl ProtocolBody for ApiVersionsResponse with set_version(self, version) {
-  self.version = version
-}
 
 ///|
 pub impl Encoder for ApiVersionsResponse with encode(self, pe) {
@@ -78,26 +72,26 @@ pub impl Encoder for ApiVersionsResponse with encode(self, pe) {
 }
 
 ///|
-pub impl VersionedDecoder for ApiVersionsResponse with decode(self, pd, version) {
-  self.version = version
-  self.error_code = pd.get_int16()
-  let numApiKeys = if self.version >= 3 {
+pub fn[T : PacketDecoder] ApiVersionsResponse::decode(
+  pd : T,
+  version : Int16,
+) -> ApiVersionsResponse raise PacketDecodingError {
+  let error_code = pd.get_int16()
+  let numApiKeys = if version >= 3 {
     pd.get_compact_array_length()
   } else {
     pd.get_array_length()
   }
-  self.api_keys = Array::new(capacity=numApiKeys)
+  let api_keys = Array::new(capacity=numApiKeys)
   for i in 0..<numApiKeys {
-    let block = ApiVersionsResponseKey::default()
-    block.decode(pd, self.version)
-    self.api_keys.push(block)
+    let block = ApiVersionsResponseKey::decode(pd, version)
+    api_keys.push(block)
   }
-  if self.version >= 1 {
-    self.throttle_time_ms = pd.get_int()
-  }
-  if self.version >= 3 {
+  let throttle_time_ms = if version >= 1 { pd.get_int() } else { 0 }
+  if version >= 3 {
     pd.get_empty_tagged_field_array() |> ignore
   }
+  { version, error_code, api_keys, throttle_time_ms }
 }
 
 ///|
@@ -111,7 +105,7 @@ pub impl ProtocolBody for ApiVersionsResponse with version(self) {
 }
 
 ///|
-pub impl EncoderWithHeader for ApiVersionsResponse with header_version(self) {
+pub impl ProtocolBody for ApiVersionsResponse with header_version(self) {
   // ApiVersionsResponse always includes a v0 header.
   // See KIP-511 for details
   return 0

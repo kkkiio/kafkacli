@@ -12,18 +12,13 @@ test "Test basic empty metadata response V0" {
     topics: Array::new(),
     cluster_authorized_operations: 0,
   }
-  let decoded = MetadataResponse::{
-    version: 0,
-    throttle_time_ms: 0,
-    brokers: Array::new(),
-    cluster_id: None,
-    controller_id: 0,
-    topics: Array::new(),
-    cluster_authorized_operations: 0,
-  }
   let encoded = encode(response)
   assert_eq(encoded, empty_response_v0)
-  versioned_decode(encoded, decoded, response.version())
+  let decoded = versioned_decode(
+    encoded,
+    MetadataResponse::decode,
+    response.version(),
+  )
   assert_eq(decoded.to_json(), response.to_json())
 
   // Verify the decoded response
@@ -74,18 +69,13 @@ test "Test metadata response with brokers V0" {
     topics: Array::new(),
     cluster_authorized_operations: 0,
   }
-  let decoded = MetadataResponse::{
-    version: 0,
-    throttle_time_ms: 0,
-    brokers: Array::new(),
-    cluster_id: None,
-    controller_id: 0,
-    topics: Array::new(),
-    cluster_authorized_operations: 0,
-  }
   let encoded = encode(response)
   assert_eq(encoded, brokers_response_v0)
-  versioned_decode(encoded, decoded, response.version())
+  let decoded = versioned_decode(
+    encoded,
+    MetadataResponse::decode,
+    response.version(),
+  )
   assert_eq(decoded.to_json(), response.to_json())
 
   // Verify the decoded response
@@ -165,18 +155,13 @@ test "Test metadata response with topics V0" {
     cluster_authorized_operations: 0,
   }
   let encoded = encode(response)
-  let decoded = MetadataResponse::{
-    version: 0,
-    throttle_time_ms: 0,
-    brokers: Array::new(),
-    cluster_id: None,
-    controller_id: 0,
-    topics: Array::new(),
-    cluster_authorized_operations: 0,
-  }
   let expected = topics_response_v0
   assert_eq(encoded, expected)
-  versioned_decode(encoded, decoded, response.version())
+  let decoded = versioned_decode(
+    encoded,
+    MetadataResponse::decode,
+    response.version(),
+  )
   assert_eq(decoded, response)
 
   // Verify the decoded response
@@ -244,18 +229,13 @@ test "Test metadata response with rack information V1" {
     topics: Array::new(),
     cluster_authorized_operations: 0,
   }
-  let decoded = MetadataResponse::{
-    version: 1,
-    throttle_time_ms: 0,
-    brokers: Array::new(),
-    cluster_id: None,
-    controller_id: 0,
-    topics: Array::new(),
-    cluster_authorized_operations: 0,
-  }
   let encoded = encode(response)
   assert_eq(encoded, rack_response_v1)
-  versioned_decode(encoded, decoded, response.version())
+  let decoded = versioned_decode(
+    encoded,
+    MetadataResponse::decode,
+    response.version(),
+  )
   assert_eq(decoded.to_json(), response.to_json())
 
   // Verify the decoded response
@@ -306,16 +286,7 @@ test "Test complete metadata response round trip" {
   let encoded = encode(response)
 
   // Decode response
-  let decoded_response = MetadataResponse::{
-    version: 0,
-    throttle_time_ms: 0,
-    brokers: Array::new(),
-    cluster_id: None,
-    controller_id: 0,
-    topics: Array::new(),
-    cluster_authorized_operations: 0,
-  }
-  versioned_decode(encoded, decoded_response, 8)
+  let decoded_response = versioned_decode(encoded, MetadataResponse::decode, 8)
 
   // Verify round trip
   inspect(decoded_response.version, content="8")

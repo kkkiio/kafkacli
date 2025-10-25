@@ -6,11 +6,6 @@ pub(open) trait Encoder {
 }
 
 ///|
-pub(open) trait EncoderWithHeader: Encoder {
-  header_version(Self) -> Int16
-}
-
-///|
 /// Encode takes an Encoder and turns it into bytes while potentially recording metrics.
 pub fn encode(e : &Encoder) -> Bytes raise {
   let prepEnc = PrepEncoder::new()
@@ -32,11 +27,6 @@ pub trait Decoder {
 }
 
 ///|
-pub trait VersionedDecoder {
-  decode(Self, &PacketDecoder, version : Int16) -> Unit raise PacketDecodingError
-}
-
-///|
 /// decode takes bytes and a decoder and fills the fields of the decoder from the bytes,
 /// interpreted using Kafka's encoding rules.
 pub fn[T] decode(
@@ -54,16 +44,17 @@ pub fn[T] decode(
 }
 
 ///|
-pub fn[T : VersionedDecoder] versioned_decode(
+pub fn[T] versioned_decode(
   buf : BytesView,
-  in_ : T,
+  decode : (&PacketDecoder, Int16) -> T raise PacketDecodingError,
   version : Int16,
-) -> Unit raise PacketDecodingError {
+) -> T raise PacketDecodingError {
   let helper = RealDecoder::new(buf)
-  in_.decode(helper, version)
+  let result = decode(helper, version)
   if helper.off != buf.length() {
     raise PacketDecodingError(
       "invalid length (off=\{helper.off}, len=\{buf.length()})",
     )
   }
+  result
 }

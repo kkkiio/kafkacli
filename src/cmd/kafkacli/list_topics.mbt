@@ -33,8 +33,11 @@ pub async fn list_topics(broker : String) -> Unit {
   guard response_bytes is [u32be(_), .. payload]
 
   // Decode MetadataResponse
-  let response = @protocol.MetadataResponse::default()
-  @protocol.versioned_decode(payload, response, body.version)
+  let response = @protocol.versioned_decode(
+    payload,
+    @protocol.MetadataResponse::decode,
+    body.version,
+  )
 
   // Print topic names, filtering out internal topics
   for topic in response.topics {

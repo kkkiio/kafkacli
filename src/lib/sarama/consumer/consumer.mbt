@@ -106,11 +106,13 @@ pub async fn partition_consumer_fetch_messages(
   let port = @strconv.parse_int(port_str) catch { _ => 9092 }
 
   // Create FetchRequest
-  let fetch_request = @protocol.FetchRequest::with_version(4) // Use version 4 for basic functionality
-  fetch_request.max_wait_time = 500 // 500ms max wait
-  fetch_request.min_bytes = 1 // Return at least 1 byte
-  fetch_request.max_bytes = 1048576 // 1MB max
-  fetch_request.isolation_level = @protocol.ReadUncommitted
+  let fetch_request = {
+    ..@protocol.FetchRequest::with_version(4),
+    max_wait_time: 500,
+    min_bytes: 1,
+    max_bytes: 1048576,
+    isolation_level: @protocol.ReadUncommitted,
+  }
 
   // Add partition to fetch request
   fetch_request.add_block(
@@ -169,9 +171,11 @@ pub async fn partition_consumer_fetch_messages(
   }
 
   // Create and decode FetchResponse
-  let fetch_response = @protocol.FetchResponse::with_version(4)
-  let response_body = fetch_response
-  @protocol.versioned_decode(payload, response_body, 4) catch {
+  let fetch_response = @protocol.versioned_decode(
+    payload,
+    @protocol.FetchResponse::decode,
+    4,
+  ) catch {
     err => fail("Failed to decode fetch response: \{err}")
   }
 
