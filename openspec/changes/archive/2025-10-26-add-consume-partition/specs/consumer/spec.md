@@ -47,8 +47,6 @@
 - **THEN** 系统 SHALL raise `OffsetOutOfRange` 错误
 - **AND** 不创建分区消费者实例
 
-## MODIFIED Requirements
-
 ### Requirement: Simplified Consumer Interface Implementation
 当前消费者接口定义了 `ConsumePartition` 方法，系统 SHALL 提供简化的 MVP 实现。
 
