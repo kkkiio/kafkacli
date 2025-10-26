@@ -204,11 +204,86 @@ pub struct AclFilter {
 ///|
 /// Topic detail structure
 pub(all) struct TopicDetail {
-  num_partitions : Int
-  replication_factor : Int
-  replica_assignment : Map[Int, Array[Int]]?
-  config_entries : Map[String, String]?
+  mut num_partitions : Int
+  mut replication_factor : Int
+  mut replica_assignment : Map[Int, Array[Int]]?
+  mut config_entries : Map[String, String]?
 } derive(Show, ToJson)
+
+///|
+const ConfigSourceDefault : Int = 5
+
+///|
+fn build_topic_detail_from_metadata(
+  topic : @protocol.TopicMetadata,
+) -> TopicDetail raise {
+  if topic.err != @protocol.KErrorCode(@protocol.ErrNoError) {
+    fail("metadata error for topic \{topic.name}: \{topic.err.to_string()}")
+  }
+  let num_partitions = topic.partitions.length()
+  let replication_factor = if num_partitions > 0 {
+    topic.partitions[0].replicas.length()
+  } else {
+    0
+  }
+  let replica_assignment = if num_partitions == 0 {
+    None
+  } else {
+    let assignment : Map[Int, Array[Int]] = Map::new()
+    for partition in topic.partitions {
+      if partition.err != @protocol.KErrorCode(@protocol.ErrNoError) {
+        fail(
+          "metadata error for topic \{topic.name} partition \{partition.id}: \{partition.err.to_string()}",
+        )
+      }
+      let replicas = Array::new()
+      for replica in partition.replicas {
+        replicas.push(replica)
+      }
+      assignment[partition.id] = replicas
+    }
+    Some(assignment)
+  }
+  {
+    num_partitions,
+    replication_factor,
+    replica_assignment,
+    config_entries: None,
+  }
+}
+
+///|
+fn merge_config_entries(
+  topic_details : Map[String, TopicDetail],
+  describe_response : @protocol.DescribeConfigsResponse,
+) -> Unit raise {
+  for resource in describe_response.resources {
+    if resource.error_code != @protocol.ErrNoError {
+      let err_msg = @protocol.KErrorCode(resource.error_code).to_string()
+      fail(
+        "describe configs error for topic \{resource.resource_name}: \{err_msg}",
+      )
+    }
+    guard topic_details.get(resource.resource_name) is Some(detail) else {
+      continue
+    }
+    let configs : Map[String, String] = Map::new()
+    for entry in resource.configs {
+      if entry.is_sensitive {
+        continue
+      }
+      if entry.config_source == ConfigSourceDefault {
+        continue
+      }
+      match entry.value {
+        Some(value) => configs[entry.name] = value
+        None => ()
+      }
+    }
+    detail.config_entries = Some(configs)
+    topic_details[resource.resource_name] = detail
+  }
+}
 
 ///|
 /// Config resource structure
@@ -439,6 +514,46 @@ pub fn KafkaClusterAdmin::new(
 }
 
 ///|
+async fn open_connection(broker : @client.Broker) -> @socket.Tcp {
+  let address = @client.broker_address(broker)
+  let parts = address.split(":").to_array()
+  if parts.length() != 2 {
+    fail("invalid broker address: \{address}")
+  }
+  let host = parts[0]
+  let port = @strconv.parse_int(parts[1]) catch {
+    err => fail("invalid broker port \{parts[1]}: \{err}")
+  }
+  let resolved = @socket.Addr::resolve(host.to_string(), port~) catch {
+    err => fail("failed to resolve broker address \{host}:\{port}: \{err}")
+  }
+  @socket.Tcp::connect(resolved) catch {
+    err => fail("failed to connect to broker \{address}: \{err}")
+  }
+}
+
+///|
+async fn[T : @protocol.ProtocolBody] send_kafka_request(
+  socket : @socket.Tcp,
+  request : @protocol.Request[T],
+) -> Bytes {
+  let packet = @protocol.encode(request)
+  socket.write(packet) catch {
+    err => fail("failed to send request: \{err}")
+  }
+  let size_buffer = socket.read_exactly(4) catch {
+    err => fail("failed to read response size: \{err}")
+  }
+  guard size_buffer is [u32be(response_size)] else {
+    fail("invalid response size header")
+  }
+  let response = socket.read_exactly(response_size.reinterpret_as_int()) catch {
+    err => fail("failed to read response body: \{err}")
+  }
+  response
+}
+
+///|
 /// Create topic (placeholder implementation)
 pub fn cluster_admin_create_topic(
   admin : KafkaClusterAdmin,
@@ -451,12 +566,91 @@ pub fn cluster_admin_create_topic(
 }
 
 ///|
-/// List topics (placeholder implementation)
-pub fn cluster_admin_list_topics(
+/// List topics 
+async fn cluster_admin_list_topics_impl(
   admin : KafkaClusterAdmin,
-) -> Map[String, TopicDetail] raise {
-  // TODO: Implement actual topic listing logic
-  ...
+  topics : Array[String],
+) -> Map[String, TopicDetail] {
+  if admin.is_closed {
+    fail("cluster admin is closed")
+  }
+  let brokers = @client.kafka_client_brokers(admin.client)
+  if brokers.length() == 0 {
+    fail("no brokers available")
+  }
+  let broker = brokers[0]
+  let socket = open_connection(broker)
+  defer socket.close()
+  let metadata_request = @protocol.MetadataRequest::new(
+    admin.conf.version,
+    topics,
+  )
+  let metadata_version = metadata_request.version()
+  let metadata_envelope = @protocol.Request::{
+    correlation_id: 1,
+    client_id: admin.conf.client_id,
+    body: metadata_request,
+  }
+  let metadata_bytes = send_kafka_request(socket, metadata_envelope)
+  guard metadata_bytes is [u32be(_), .. metadata_payload] else {
+    fail("invalid metadata response payload")
+  }
+  let metadata_response = @protocol.versioned_decode(
+    metadata_payload,
+    @protocol.MetadataResponse::decode,
+    metadata_version,
+  )
+  let topics_detail : Map[String, TopicDetail] = Map::new()
+  let describe_resources : Array[@protocol.DescribeConfigsRequestResource] = []
+  for topic in metadata_response.topics {
+    let detail = build_topic_detail_from_metadata(topic)
+    topics_detail[topic.name] = detail
+    let resource = @protocol.DescribeConfigsRequestResource::new(
+      config_resource_type_to_int(TopicResource),
+      topic.name,
+      None,
+    )
+    describe_resources.push(resource)
+  }
+  if describe_resources.length() == 0 {
+    return topics_detail
+  }
+  let describe_request = @protocol.DescribeConfigsRequest::new(
+    admin.conf.version,
+    describe_resources,
+  )
+  let describe_version = describe_request.version()
+  let describe_envelope = @protocol.Request::{
+    correlation_id: 2,
+    client_id: admin.conf.client_id,
+    body: describe_request,
+  }
+  let describe_bytes = send_kafka_request(socket, describe_envelope)
+  guard describe_bytes is [u32be(_), .. describe_payload] else {
+    fail("invalid describe configs response payload")
+  }
+  let describe_response = @protocol.versioned_decode(
+    describe_payload,
+    @protocol.DescribeConfigsResponse::decode,
+    describe_version,
+  )
+  merge_config_entries(topics_detail, describe_response)
+  topics_detail
+}
+
+///|
+pub async fn cluster_admin_list_topics(
+  admin : KafkaClusterAdmin,
+) -> Map[String, TopicDetail] {
+  cluster_admin_list_topics_impl(admin, [])
+}
+
+///|
+pub async fn cluster_admin_list_topics_filtered(
+  admin : KafkaClusterAdmin,
+  topics : Array[String],
+) -> Map[String, TopicDetail] {
+  cluster_admin_list_topics_impl(admin, topics)
 }
 
 ///|

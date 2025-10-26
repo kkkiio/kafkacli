@@ -112,6 +112,13 @@ pub fn allocate_body(
           ListGroups(ListGroupsRequest::decode(pd, version))
         },
       )
+    ApiKeyDescribeConfigs =>
+      (
+        DescribeConfigsRequest::header_version(version),
+        fn(pd, version) raise PacketDecodingError {
+          DescribeConfigs(DescribeConfigsRequest::decode(pd, version))
+        },
+      )
     // apiKeySaslHandshake => SaslHandshakeRequest::new(version)
     ApiKeyApiVersions =>
       (
@@ -187,6 +194,7 @@ pub(all) enum ProtocolBodyAdapter {
   Fetch(FetchRequest)
   ListGroups(ListGroupsRequest)
   ListGroupsResponse(ListGroupsResponse)
+  DescribeConfigs(DescribeConfigsRequest)
 } derive(Show, ToJson)
 
 ///|
@@ -197,6 +205,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with key(self) {
     Fetch(body) => body.key()
     ListGroups(body) => body.key()
     ListGroupsResponse(body) => body.key()
+    DescribeConfigs(body) => body.key()
   }
 }
 
@@ -208,6 +217,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with version(self) {
     Fetch(body) => body.version()
     ListGroups(body) => body.version()
     ListGroupsResponse(body) => body.version()
+    DescribeConfigs(body) => body.version()
   }
 }
 
@@ -219,6 +229,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with header_version(self) {
     Fetch(body) => ProtocolBody::header_version(body)
     ListGroups(body) => ProtocolBody::header_version(body)
     ListGroupsResponse(body) => ProtocolBody::header_version(body)
+    DescribeConfigs(body) => ProtocolBody::header_version(body)
   }
 }
 
@@ -230,6 +241,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with is_valid_version(self) {
     Fetch(body) => body.is_valid_version()
     ListGroups(body) => body.is_valid_version()
     ListGroupsResponse(body) => body.is_valid_version()
+    DescribeConfigs(body) => body.is_valid_version()
   }
 }
 
@@ -241,6 +253,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with required_version(self) {
     Fetch(body) => body.required_version()
     ListGroups(body) => body.required_version()
     ListGroupsResponse(body) => body.required_version()
+    DescribeConfigs(body) => body.required_version()
   }
 }
 
@@ -252,5 +265,6 @@ pub impl KafkaEncoder for ProtocolBodyAdapter with encode(self, pe) {
     Fetch(body) => body.encode(pe)
     ListGroups(body) => body.encode(pe)
     ListGroupsResponse(body) => body.encode(pe)
+    DescribeConfigs(body) => body.encode(pe)
   }
 }

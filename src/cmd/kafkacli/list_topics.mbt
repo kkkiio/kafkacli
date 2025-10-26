@@ -1,48 +1,49 @@
 ///|
-pub async fn list_topics(broker : String) -> Unit {
-  let parts = broker.split(":").to_array()
-  if parts.length() != 2 {
-    fail("Invalid broker address format. Expected host:port")
-  }
-  let host = parts[0]
-  let port = @strconv.parse_int(parts[1])
-  let addr = @socket.Addr::resolve(host.to_string(), port~) catch {
-    err => fail("Failed to resolve address: \{err}, host=\{host}, port=\{port}")
-  }
-  let socket = @socket.TCP::connect(addr) catch {
-    err => fail("Failed to connect to broker: \{err}, addr=\{addr}")
-  }
-  defer socket.close()
+struct TopicSummary {
+  name : String
+  num_partitions : Int
+  replication_factor : Int
+  replica_assignment : Map[Int, Array[Int]]?
+  config_entries : Map[String, String]?
+} derive(ToJson)
 
-  // Create empty MetadataRequest to get all topics
-  let body = @protocol.MetadataRequest::new(@protocol.default_version, [])
-  let req = @protocol.Request::{ body, correlation_id: 123, client_id: "kafkacli" }
-  let req_packet = @protocol.encode(req)
-  socket.write(req_packet)
-
-  // Read response size
-  guard (socket.read_exactly(4) catch {
-      e => fail("Failed to read response size: \{e}")
+///|
+pub fn build_topic_summaries(
+  topic_map : Map[String, @admin.TopicDetail],
+) -> Array[TopicSummary] {
+  let summaries = Array::new()
+  for topic_name, detail in topic_map {
+    summaries.push(TopicSummary::{
+      name: topic_name,
+      num_partitions: detail.num_partitions,
+      replication_factor: detail.replication_factor,
+      replica_assignment: detail.replica_assignment,
+      config_entries: detail.config_entries,
     })
-    is [u32be(response_size)] else {
-    fail("Failed to read response size")
   }
+  summaries
+}
 
-  // Read response body
-  let response_bytes = socket.read_exactly(response_size.reinterpret_as_int())
-  guard response_bytes is [u32be(_), .. payload]
-
-  // Decode MetadataResponse
-  let response = @protocol.versioned_decode(
-    payload,
-    @protocol.MetadataResponse::decode,
-    body.version,
-  )
-
-  // Print topic names, filtering out internal topics
-  for topic in response.topics {
-    if !topic.is_internal && topic.err.int_value() == 0 {
-      println(topic.name)
-    }
+///|
+async fn fetch_topic_details(
+  bootstrap_servers : Array[String],
+  topics : Array[String],
+) -> Map[String, @admin.TopicDetail] {
+  let client = @client.KafkaClient::new(@core.Config::new(), bootstrap_servers)
+  let admin = @admin.KafkaClusterAdmin::new(client)
+  if topics.length() == 0 {
+    @admin.cluster_admin_list_topics(admin)
+  } else {
+    @admin.cluster_admin_list_topics_filtered(admin, topics)
   }
+}
+
+///|
+pub async fn list_topics(
+  bootstrap_servers : Array[String],
+  topics : Array[String],
+) -> Unit {
+  let topic_map = fetch_topic_details(bootstrap_servers, topics)
+  let summaries = build_topic_summaries(topic_map)
+  println(summaries.to_json().stringify(indent=2))
 }

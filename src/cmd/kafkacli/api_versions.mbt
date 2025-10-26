@@ -9,7 +9,7 @@ pub async fn api_versions(broker : String) -> Unit {
   let addr = @socket.Addr::resolve(host.to_string(), port~) catch {
     err => fail("Failed to resolve address: \{err}, host=\{host}, port=\{port}")
   }
-  let socket = @socket.TCP::connect(addr) catch {
+  let socket = @socket.Tcp::connect(addr) catch {
     err => fail("Failed to connect to broker: \{err}, addr=\{addr}")
   }
   defer socket.close()

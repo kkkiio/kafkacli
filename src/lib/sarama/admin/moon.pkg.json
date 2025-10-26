@@ -1,6 +1,9 @@
 {
   "import": [
     "kkkiio/kafkacli/lib/sarama/client",
-    "kkkiio/kafkacli/lib/sarama/core"
+    "kkkiio/kafkacli/lib/sarama/core",
+    "kkkiio/kafkacli/lib/sarama/protocol",
+    "moonbitlang/async/io",
+    "moonbitlang/async/socket"
   ]
 }

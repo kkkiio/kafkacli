@@ -42,21 +42,19 @@ async fn main {
         usage,
         argv,
       )
-      // Assuming we use the first broker from the list for now.
-      // Or handle multiple brokers appropriately, e.g., join them into a comma-separated string if your library supports it.
       let bootstrap_servers = match bootstrap_servers.val {
         "" => {
-          println("Broker is required")
+          println("bootstrap servers are required")
           return
         }
-        _ => bootstrap_servers.val
+        b => b.split(",").map(_.to_string()).to_array()
       }
       let topics = match topics.val {
         "" => {
           println("Topics are required")
           return
         }
-        _ => topics.val
+        t => t.split(",").map(_.to_string()).to_array()
       }
       let group = match group.val {
         "" => "test-group"
@@ -70,12 +68,7 @@ async fn main {
           return
         }
       }
-      consume(
-        bootstrap_servers,
-        topics.split(",").map(_.to_string()).to_array(),
-        group,
-        offset,
-      ) catch {
+      consume(bootstrap_servers, topics, group, offset) catch {
         e => println("Error: \{e}")
       }
     }
@@ -83,9 +76,10 @@ async fn main {
       let usage =
         #| Kafka list topics CLI tool
         #| usage:
-        #|      kafkacli list-topics --bootstrap-server <broker>
+        #|      kafkacli list-topics --bootstrap-server <broker>[,<broker>...] [--topics <topic1,topic2>]
         #|
       let bootstrap_servers = @ref.new("")
+      let topics = @ref.new("")
       @ArgParser.parse(
         [
           (
@@ -94,6 +88,7 @@ async fn main {
             Set_string(bootstrap_servers),
             "bootstrap servers",
           ),
+          ("--topics", "-t", Set_string(topics), "comma separated topics"),
         ],
         fn(_) {  },
         usage,
@@ -104,9 +99,13 @@ async fn main {
           println("bootstrap server is required")
           return
         }
-        _ => bootstrap_servers.val
+        b => b.split(",").map(_.to_string()).to_array()
       }
-      list_topics(bootstrap_servers)
+      let topics = match topics.val {
+        "" => []
+        _ => topics.val.split(",").map(_.to_string()).to_array()
+      }
+      list_topics(bootstrap_servers, topics)
     }
     "api-versions" => {
       let usage =
@@ -194,9 +193,8 @@ async fn main {
         }
         _ => partition.val
       }
-      let partition = match (try? @strconv.parse_int(partition_str)) {
-        Ok(n) => n
-        Err(_) => {
+      let partition = @strconv.parse_int(partition_str) catch {
+        _ => {
           println("Invalid partition number: \{partition_str}")
           return
         }
@@ -208,9 +206,8 @@ async fn main {
         }
         _ => offset.val
       }
-      let offset = match (try? @strconv.parse_int64(offset_str)) {
-        Ok(n) => n
-        Err(_) => {
+      let offset = @strconv.parse_int64(offset_str) catch {
+        _ => {
           println("Invalid offset number: \{offset_str}")
           return
         }

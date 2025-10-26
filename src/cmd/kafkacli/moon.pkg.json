@@ -6,6 +6,8 @@
     "moonbitlang/async",
     "moonbitlang/async/io",
     "moonbitlang/async/socket",
+    "kkkiio/kafkacli/lib/sarama/admin",
+    "kkkiio/kafkacli/lib/sarama/client",
     "kkkiio/kafkacli/lib/sarama/core",
     "kkkiio/kafkacli/lib/sarama/protocol",
     "kkkiio/kafkacli/lib/sarama/consumer",

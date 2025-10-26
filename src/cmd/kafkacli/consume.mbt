@@ -8,7 +8,7 @@ priv suberror ConsumeError {
 ///|
 /// consume messages from kafka
 pub fn consume(
-  broker : String,
+  bootstrap_servers : Array[String],
   topics : Array[String],
   group : String,
   offset : @core.OffsetReset,
