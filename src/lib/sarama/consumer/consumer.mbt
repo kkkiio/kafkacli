@@ -14,7 +14,7 @@ pub struct KafkaPartitionConsumer {
   mut leader_addr : String
   mut leader_epoch : Int
   mut is_closed : Bool
-} derive(Show, ToJson)
+} derive(Show)
 
 ///|
 /// Choose starting offset for partition consumer
@@ -218,24 +218,24 @@ async fn partition_consumer_fetch_offset(
 
 ///|
 /// Fetch messages from partition。内部会自动刷新元数据并在 leader 漂移时重试。
-pub async fn partition_consumer_fetch_messages(
-  consumer : KafkaPartitionConsumer,
+pub async fn KafkaPartitionConsumer::fetch_messages(
+  self : KafkaPartitionConsumer,
 ) -> Array[@protocol.ConsumerMessage] {
-  if consumer.is_closed {
+  if self.is_closed {
     fail("Consumer is closed")
   }
-  let conf = @client.kafka_client_config(consumer.client)
+  let conf = @client.kafka_client_config(self.client)
   let max_partition_fetch_bytes = conf.consumer.max_partition_fetch_bytes
   let mut attempt = 0
   let max_attempts = 3
   let mut last_error : String? = None
   while attempt < max_attempts {
-    if consumer.leader_addr.length() == 0 {
-      let (addr, epoch) = partition_consumer_resolve_leader(consumer)
-      consumer.leader_addr = addr
-      consumer.leader_epoch = epoch
+    if self.leader_addr.length() == 0 {
+      let (addr, epoch) = partition_consumer_resolve_leader(self)
+      self.leader_addr = addr
+      self.leader_epoch = epoch
     }
-    let leader_epoch = consumer.leader_epoch
+    let leader_epoch = self.leader_epoch
     let fetch_request = {
       ..@protocol.FetchRequest::with_version(11),
       max_wait_time: conf.consumer.max_wait_time_ms,
@@ -244,9 +244,9 @@ pub async fn partition_consumer_fetch_messages(
       isolation_level: @protocol.ReadUncommitted,
     }
     fetch_request.add_block(
-      consumer.topic.to_string(),
-      consumer.partition,
-      consumer.offset,
+      self.topic.to_string(),
+      self.partition,
+      self.offset,
       max_partition_fetch_bytes,
       leader_epoch,
     )
@@ -254,7 +254,7 @@ pub async fn partition_consumer_fetch_messages(
     let request = @protocol.Request::{
       body: fetch_request,
       correlation_id,
-      client_id: consumer.client_id,
+      client_id: self.client_id,
     }
     let encoded_request = @protocol.encode(request) catch {
       err => {
@@ -264,7 +264,7 @@ pub async fn partition_consumer_fetch_messages(
       }
     }
     let payload = partition_consumer_send_request(
-      consumer.leader_addr,
+      self.leader_addr,
       encoded_request,
     )
     let fetch_response = @protocol.versioned_decode(
@@ -278,16 +278,16 @@ pub async fn partition_consumer_fetch_messages(
         continue
       }
     }
-    match fetch_response.blocks.get(consumer.topic) {
+    match fetch_response.blocks.get(self.topic) {
       Some(partitions) =>
-        match partitions.get(consumer.partition) {
+        match partitions.get(self.partition) {
           Some(partition_response) => {
             let error_code = partition_response.error
             if error_code != @protocol.ErrNoError {
               if partition_consumer_is_leader_error(error_code) {
-                let (addr, epoch) = partition_consumer_resolve_leader(consumer)
-                consumer.leader_addr = addr
-                consumer.leader_epoch = epoch
+                let (addr, epoch) = partition_consumer_resolve_leader(self)
+                self.leader_addr = addr
+                self.leader_epoch = epoch
                 last_error = Some(
                   "Leader error during fetch, code " + error_code.to_string(),
                 )
@@ -295,7 +295,7 @@ pub async fn partition_consumer_fetch_messages(
                 continue
               } else if error_code == @protocol.ErrOffsetOutOfRange {
                 last_error = Some(
-                  "Offset \{consumer.offset} out of range for \{consumer.topic}:\{consumer.partition}",
+                  "Offset \{self.offset} out of range for \{self.topic}:\{self.partition}",
                 )
                 break
               } else {
@@ -306,36 +306,35 @@ pub async fn partition_consumer_fetch_messages(
               }
             }
             let messages = @protocol.parse_records_to_consumer_messages(
-              consumer.topic,
-              consumer.partition,
+              self.topic,
+              self.partition,
               partition_response.records,
             )
             let filtered_messages = []
             for msg in messages {
-              if msg.offset >= consumer.offset {
+              if msg.offset >= self.offset {
                 filtered_messages.push(msg)
               }
             }
             if filtered_messages.length() > 0 {
               let last_message = filtered_messages[filtered_messages.length() -
                 1]
-              consumer.offset = last_message.offset + 1
-            } else if partition_response.high_watermark_offset > consumer.offset {
-              consumer.offset = partition_response.high_watermark_offset
+              self.offset = last_message.offset + 1
+            } else if partition_response.high_watermark_offset > self.offset {
+              self.offset = partition_response.high_watermark_offset
             }
             return filtered_messages
           }
           None => {
             last_error = Some(
-              "No fetch response for partition " +
-              consumer.partition.to_string(),
+              "No fetch response for partition " + self.partition.to_string(),
             )
             attempt = attempt + 1
             continue
           }
         }
       None => {
-        last_error = Some("No fetch response for topic " + consumer.topic)
+        last_error = Some("No fetch response for topic " + self.topic)
         attempt = attempt + 1
         continue
       }
@@ -367,13 +366,6 @@ pub fn KafkaPartitionConsumer::close(self : KafkaPartitionConsumer) -> Unit {
 }
 
 ///|
-pub async fn KafkaPartitionConsumer::fetch_messages(
-  self : KafkaPartitionConsumer,
-) -> Array[@protocol.ConsumerMessage] {
-  partition_consumer_fetch_messages(self)
-}
-
-///|
 pub fn KafkaPartitionConsumer::is_closed(self : KafkaPartitionConsumer) -> Bool {
   partition_consumer_is_closed(self)
 }
@@ -386,26 +378,37 @@ pub fn KafkaPartitionConsumer::current_offset(
 }
 
 ///|
+/// HighWaterMarkOffset returns the high water mark offset of the partition,
+/// i.e. the offset that will be used for the next message that will be produced.
+/// You can use this to determine how far behind the processing is.
+pub fn KafkaPartitionConsumer::high_water_mark_offset(
+  self : KafkaPartitionConsumer,
+) -> Int64 {
+  ...
+}
+
+///|
 /// Simplified consumer implementation for MVP
 pub struct KafkaConsumer {
   client : @client.KafkaClient
   conf : @core.Config
-} derive(Show, ToJson)
+} derive(Show)
 
 ///|
-/// Create a new consumer (simplified MVP implementation)
-pub fn consumer_new(client : @client.KafkaClient) -> KafkaConsumer raise {
-  if @client.kafka_client_closed(client) {
-    fail("Client is closed")
-  }
-  { client, conf: @client.kafka_client_config(client) }
+/// // NewConsumer creates a new consumer using the given broker addresses and configuration.
+pub fn KafkaConsumer::new(
+  addrs : Array[String],
+  conf : @core.Config,
+) -> KafkaConsumer {
+  let client = @client.KafkaClient::new(conf, addrs)
+  { client, conf }
 }
 
 ///|
 /// Get topics from consumer (delegates to client)
 pub fn consumer_topics(
   consumer : KafkaConsumer,
-) -> Result[Array[String], String] {
+) -> Array[String] raise {
   @client.kafka_client_topics(consumer.client)
 }
 
@@ -414,24 +417,24 @@ pub fn consumer_topics(
 pub fn consumer_partitions(
   consumer : KafkaConsumer,
   topic : String,
-) -> Result[Array[Int], String] {
+) -> Array[Int] raise {
   @client.kafka_client_partitions(consumer.client, topic)
 }
 
 ///|
 /// Create partition consumer (simplified MVP implementation)
-pub async fn consumer_consume_partition(
-  consumer : KafkaConsumer,
+pub async fn KafkaConsumer::consume_partition(
+  self : KafkaConsumer,
   topic : String,
   partition : Int,
   offset : Int64,
 ) -> KafkaPartitionConsumer {
-  partition_consumer_new(topic, partition, offset, consumer.client)
+  partition_consumer_new(topic, partition, offset, self.client)
 }
 
 ///|
 /// Close consumer (simplified MVP implementation)
-pub fn consumer_close(consumer : KafkaConsumer) -> Unit {
+pub fn KafkaConsumer::close(self : KafkaConsumer) -> Unit {
   // Simple MVP implementation - just delegate to client close
-  @client.kafka_client_close(consumer.client)
+  @client.kafka_client_close(self.client)
 }

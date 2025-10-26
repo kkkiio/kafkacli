@@ -65,7 +65,7 @@ pub fn ListGroupsResponse::add_group_with_data(
 
 ///|
 /// Encode list groups response to packet encoder
-pub impl Encoder for ListGroupsResponse with encode(self, pe) {
+pub impl KafkaEncoder for ListGroupsResponse with encode(self, pe) {
   if self.version < 0 || self.version > 5 {
     raise PacketEncodingError(
       "invalid or unsupported ListGroupsResponse version field",

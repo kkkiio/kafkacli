@@ -53,7 +53,7 @@ pub(all) struct ApiVersionsResponse {
 } derive(Show, Default, ToJson)
 
 ///|
-pub impl Encoder for ApiVersionsResponse with encode(self, pe) {
+pub impl KafkaEncoder for ApiVersionsResponse with encode(self, pe) {
   pe.put_int16(self.error_code)
   if self.version >= 3 {
     pe.put_compact_array_length(self.api_keys.length())

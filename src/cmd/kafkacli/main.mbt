@@ -1,5 +1,5 @@
 ///|
-fn main {
+async fn main {
   let argv = @sys.get_cli_args()
   // implement subcommands manually because ArgParser doesn't support subcommands yet
   let usage =
@@ -106,9 +106,7 @@ fn main {
         }
         _ => bootstrap_servers.val
       }
-      @async.with_event_loop(fn(_) { list_topics(bootstrap_servers) }) catch {
-        e => println("Error: \{e}")
-      }
+      list_topics(bootstrap_servers)
     }
     "api-versions" => {
       let usage =
@@ -137,9 +135,7 @@ fn main {
         }
         _ => bootstrap_servers.val
       }
-      @async.with_event_loop(fn(_) { api_versions(bootstrap_servers) }) catch {
-        e => println("Error: \{e}")
-      }
+      api_versions(bootstrap_servers)
     }
     "consume-partition" => {
       let usage =
@@ -219,11 +215,7 @@ fn main {
           return
         }
       }
-      @async.with_event_loop(fn(_) {
-        consume_partition(logger, bootstrap_servers, topic, partition, offset)
-      }) catch {
-        e => println("Error: \{e}")
-      }
+      consume_partition(logger, bootstrap_servers, topic, partition, offset)
     }
     sub_command => println("Unknown subcommand: \{sub_command}")
   }

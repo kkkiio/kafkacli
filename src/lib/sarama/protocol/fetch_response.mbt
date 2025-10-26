@@ -30,7 +30,7 @@ pub fn AbortedTransaction::decode(
 pub(all) struct FetchResponseBlock {
   version : Int16
   error : Int16
-  high_watermark_offset : Int64
+  mut high_watermark_offset : Int64
   last_stable_offset : Int64
   log_start_offset : Int64
   aborted_transactions : Array[AbortedTransaction]
@@ -238,7 +238,7 @@ pub fn FetchResponse::get_or_create_block(
 
 ///|
 /// Encode fetch response to packet encoder
-pub impl Encoder for FetchResponse with encode(self, pe) {
+pub impl KafkaEncoder for FetchResponse with encode(self, pe) {
   if self.version < 0 || self.version > 11 {
     raise PacketEncodingError(
       "invalid or unsupported FetchResponse version field",

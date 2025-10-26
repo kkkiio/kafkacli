@@ -2,6 +2,7 @@
   "import": [
     "kkkiio/kafkacli/lib/encoding/binary",
     "moonbitlang/async/io",
-    "moonbitlang/x/uuid"
+    "moonbitlang/x/uuid",
+    "moonbitlang/async"
   ]
 }

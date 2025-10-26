@@ -1,5 +1,5 @@
 ///|
-pub trait ProtocolBody: Encoder + ToJson {
+pub trait ProtocolBody: KafkaEncoder + ToJson {
   key(Self) -> Int16
   version(Self) -> Int16
   header_version(Self) -> Int16
@@ -15,7 +15,7 @@ pub(all) struct Request[T] {
 } derive(ToJson)
 
 ///|
-pub impl[T : ProtocolBody] Encoder for Request[T] with encode(self, pe) {
+pub impl[T : ProtocolBody] KafkaEncoder for Request[T] with encode(self, pe) {
   pe.push(LengthField::default())
   let body = self.body
   pe.put_int16(body.key())
@@ -245,7 +245,7 @@ pub impl ProtocolBody for ProtocolBodyAdapter with required_version(self) {
 }
 
 ///|
-pub impl Encoder for ProtocolBodyAdapter with encode(self, pe) {
+pub impl KafkaEncoder for ProtocolBodyAdapter with encode(self, pe) {
   match self {
     ApiVersions(body) => body.encode(pe)
     Metadata(body) => body.encode(pe)

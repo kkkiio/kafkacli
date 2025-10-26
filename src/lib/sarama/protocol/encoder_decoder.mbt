@@ -1,13 +1,13 @@
 ///|
 // Encoder is the interface that wraps the basic Encode method.
 // Anything implementing Encoder can be turned into bytes using Kafka's encoding rules.
-pub(open) trait Encoder {
+pub(open) trait KafkaEncoder {
   encode(Self, &PacketEncoder) -> Unit raise
 }
 
 ///|
 /// Encode takes an Encoder and turns it into bytes while potentially recording metrics.
-pub fn encode(e : &Encoder) -> Bytes raise {
+pub fn encode(e : &KafkaEncoder) -> Bytes raise {
   let prepEnc = PrepEncoder::new()
   e.encode(prepEnc)
   if prepEnc.length < 0 || prepEnc.length > MaxRequestSize.reinterpret_as_int() {
@@ -25,6 +25,12 @@ pub fn encode(e : &Encoder) -> Bytes raise {
 pub trait Decoder {
   decode(Self, &PacketDecoder) -> Unit raise PacketDecodingError
 }
+// type versionedDecoder interface {
+// 	decode(pd packetDecoder, version int16) error
+// }
+
+///|
+pub typealias (&PacketDecoder, Int16) -> &ProtocolBody as VersionedDecoder
 
 ///|
 /// decode takes bytes and a decoder and fills the fields of the decoder from the bytes,

@@ -425,7 +425,7 @@ pub struct KafkaClusterAdmin {
   client : @client.KafkaClient
   conf : @core.Config
   is_closed : Bool
-} derive(Show, ToJson)
+} derive(Show)
 
 ///|
 /// Create a new cluster admin

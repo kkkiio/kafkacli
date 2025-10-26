@@ -10,12 +10,7 @@ pub struct OffsetRequestBlock {
 ///|
 /// Create a new offset request block with defaults
 pub fn OffsetRequestBlock::new(version : Int16) -> OffsetRequestBlock {
-  {
-    version,
-    current_leader_epoch: -1,
-    timestamp: -1L,
-    max_num_offsets: 1,
-  }
+  { version, current_leader_epoch: -1, timestamp: -1L, max_num_offsets: 1 }
 }
 
 ///|
@@ -89,13 +84,11 @@ pub fn OffsetRequest::add_block(
 
 ///|
 /// Encode whole request
-pub impl Encoder for OffsetRequest with encode(self, pe) {
+pub impl KafkaEncoder for OffsetRequest with encode(self, pe) {
   pe.put_int(self.replica_id)
-
   if self.version >= 2 {
     pe.put_bool(self.isolation_level == ReadCommitted)
   }
-
   pe.put_array_length(self.blocks.length())
   for topic, partitions in self.blocks {
     pe.put_string(topic)

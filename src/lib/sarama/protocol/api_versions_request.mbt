@@ -9,7 +9,7 @@ pub(all) struct ApiVersionsRequest {
 } derive(Show, ToJson, Default)
 
 ///|
-pub impl Encoder for ApiVersionsRequest with encode(self, pe) {
+pub impl KafkaEncoder for ApiVersionsRequest with encode(self, pe) {
   if self.version >= 3 {
     pe.put_compact_string(self.client_software_name)
     pe.put_compact_string(self.client_software_version)

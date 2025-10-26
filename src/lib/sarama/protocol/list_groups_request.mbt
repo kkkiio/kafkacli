@@ -28,7 +28,7 @@ pub impl Default for ListGroupsRequest with default() {
 
 ///|
 /// Encode list groups request to packet encoder
-pub impl Encoder for ListGroupsRequest with encode(self, pe) {
+pub impl KafkaEncoder for ListGroupsRequest with encode(self, pe) {
   if self.version < 0 || self.version > 5 {
     raise PacketEncodingError(
       "invalid or unsupported ListGroupsRequest version field",

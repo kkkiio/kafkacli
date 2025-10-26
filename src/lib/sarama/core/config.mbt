@@ -72,7 +72,10 @@ pub(all) struct ConsumerConfig {
   max_partition_fetch_bytes : Int
   session_timeout_ms : Int
   heartbeat_interval_ms : Int
-} derive(Show, ToJson)
+  // How long to wait after a failing to read from a partition before
+  // trying again (default 2s).
+  retry_backoff_ms : Milliseconds
+} derive(Show)
 
 ///|
 pub(all) enum OffsetReset {
@@ -92,6 +95,7 @@ pub impl Default for ConsumerConfig with default() {
     max_partition_fetch_bytes: 1048576, // 1MB
     session_timeout_ms: 10000,
     heartbeat_interval_ms: 3000,
+    retry_backoff_ms: 2000,
   }
 }
 
@@ -103,17 +107,31 @@ pub(all) struct Config {
   net : NetConfig
   producer : ProducerConfig
   consumer : ConsumerConfig
-} derive(Show, ToJson)
+  /// ApiVersionsRequest determines whether Sarama should send an
+  /// ApiVersionsRequest message to each broker as part of its initial
+  /// connection. This defaults to `true` to match the official Java client
+  /// and most 3rdparty ones.
+  api_versions_request : Bool
+  /// The version of Kafka that Sarama will assume it is running against.
+  /// Defaults to the oldest supported stable version. Since Kafka provides
+  /// backwards-compatibility, setting it to a version older than you have
+  /// will not break anything, although it may prevent you from using the
+  /// latest features. Setting it to a version greater than you are actually
+  /// running may lead to random breakage.
+  version : @protocol.KafkaVersion
+} derive(Show)
 
 ///|
 /// Default configuration
 pub impl Default for Config with default() {
   {
-    client_id: "sarama",
+    client_id: "sarama-mbt",
     admin: AdminConfig::default(),
     net: NetConfig::default(),
     producer: ProducerConfig::default(),
     consumer: ConsumerConfig::default(),
+    api_versions_request: true,
+    version: @protocol.default_version,
   }
 }
 
@@ -122,3 +140,6 @@ pub impl Default for Config with default() {
 pub fn Config::new() -> Config {
   Config::default()
 }
+
+///|
+using @protocol {type Milliseconds}

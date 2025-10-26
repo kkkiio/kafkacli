@@ -1,8 +1,8 @@
 ///|
 /// Null UUID constant for metadata requests
-pub let null_uuid : @uuid.UUID = (try? @uuid.from_bytes(
-  b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
-)).unwrap()
+pub let null_uuid : @uuid.UUID = try! @uuid.from_bytes(
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
+  )
 
 ///|
 /// Metadata request structure for fetching topic metadata from Kafka cluster
@@ -63,7 +63,7 @@ pub impl Default for MetadataRequest with default() {
 
 ///|
 /// Encode metadata request to packet encoder
-pub impl Encoder for MetadataRequest with encode(self, pe) {
+pub impl KafkaEncoder for MetadataRequest with encode(self, pe) {
   if self.version < 0 || self.version > 10 {
     raise PacketEncodingError(
       "invalid or unsupported MetadataRequest version field",

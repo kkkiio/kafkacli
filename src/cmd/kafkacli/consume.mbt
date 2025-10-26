@@ -80,16 +80,11 @@ pub async fn consume_partition(
   // Create client configuration
   let config = @core.Config::new()
 
-  // Create Kafka client
-  let client = @client.KafkaClient::new(config, bootstrap_servers)
-
   // Create consumer
-  let consumer = @consumer.consumer_new(client)
+  let consumer = @consumer.KafkaConsumer::new(bootstrap_servers, config)
 
   // Create partition consumer
-  let partition_consumer = @consumer.consumer_consume_partition(
-    consumer, topic, partition, offset,
-  )
+  let partition_consumer = consumer.consume_partition(topic, partition, offset)
   // Fetch messages
   let messages = partition_consumer.fetch_messages()
   for msg in messages {
@@ -102,5 +97,5 @@ pub async fn consume_partition(
   partition_consumer.close()
 
   // Close consumer
-  @consumer.consumer_close(consumer)
+  consumer.close()
 }

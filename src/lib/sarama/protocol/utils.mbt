@@ -16,6 +16,28 @@ pub trait MessageEncoder {
   encode(Self) -> Bytes raise
   length(Self) -> Int
 }
+// make strings and byte slices encodable for convenience so they can be used as keys
+// and/or values in kafka messages
+
+///|
+pub impl MessageEncoder for String with encode(self) {
+  return @encoding/utf8.encode(self)
+}
+
+///|
+pub impl MessageEncoder for String with length(self) {
+  return self.length()
+}
+
+///|
+pub impl MessageEncoder for Bytes with encode(self) {
+  return self
+}
+
+///|
+pub impl MessageEncoder for Bytes with length(self) {
+  return self.length()
+}
 
 // KafkaVersion instances represent versions of the upstream Kafka broker.
 // it's a struct rather than just typing the array directly to make it opaque and stop people
@@ -350,6 +372,11 @@ pub impl Show for KafkaVersion with output(self, logger) {
   logger.write_string(s)
 }
 
+///|
+pub impl ToJson for KafkaVersion with to_json(self) {
+  self.to_string().to_json()
+}
+
 // NewExponentialBackoff returns a function that implements an exponential backoff strategy with jitter.
 // It follows KIP-580, implementing the formula:
 // MIN(retry.backoff.max.ms, (retry.backoff.ms * 2**(failures - 1)) * random(0.8, 1.2))
@@ -391,4 +418,22 @@ pub fn new_exponential_backoff(
     let c = ((backoff * exp).to_double() * jitter).to_int64()
     return @cmp.minimum(c, maxBackoff)
   }
+}
+
+///|
+/// Join host and port into address string
+pub fn join_host_port(host : String, port : Int) -> String {
+  "\{host}:\{port}"
+}
+
+///|
+pub fn split_host_port(hostport : String) -> (String, Int) raise {
+  let parts = hostport.split(":").to_array()
+  if parts.length() != 2 {
+    raise fail("invalid hostport \{hostport}")
+  }
+  let port = @strconv.parse_int(parts[1]) catch {
+    _ => fail("invalid port \{parts[1]}")
+  }
+  (parts[0].to_string(), port)
 }

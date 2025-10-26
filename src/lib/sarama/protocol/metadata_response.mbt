@@ -18,7 +18,7 @@ pub(all) struct PartitionMetadata {
 
 ///|
 /// Encode partition metadata to packet encoder
-pub impl Encoder for PartitionMetadata with encode(self, pe) {
+pub impl KafkaEncoder for PartitionMetadata with encode(self, pe) {
   pe.put_int16(self.err.int_value())
   pe.put_int(self.id)
   pe.put_int(self.leader)
@@ -128,7 +128,7 @@ pub impl ToJson for TopicMetadata with to_json(self) {
 
 ///|
 /// Encode topic metadata to packet encoder
-pub impl Encoder for TopicMetadata with encode(self, pe) {
+pub impl KafkaEncoder for TopicMetadata with encode(self, pe) {
   pe.put_int16(self.err.int_value())
 
   // Encode topic name
@@ -287,7 +287,7 @@ pub impl ProtocolBody for MetadataResponse with required_version(self) {
 
 ///|
 /// Encode metadata response to packet encoder
-pub impl Encoder for MetadataResponse with encode(self, pe) {
+pub impl KafkaEncoder for MetadataResponse with encode(self, pe) {
   // Encode throttle time for versions 3+
   if self.version >= 3 {
     pe.put_int(self.throttle_time_ms)

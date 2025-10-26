@@ -161,7 +161,7 @@ pub fn FetchRequest::add_block(
 
 ///|
 /// Encode fetch request to packet encoder
-pub impl Encoder for FetchRequest with encode(self, pe) {
+pub impl KafkaEncoder for FetchRequest with encode(self, pe) {
   if self.version < 0 || self.version > 11 {
     raise PacketEncodingError(
       "invalid or unsupported FetchRequest version field",

@@ -132,7 +132,7 @@ pub struct KafkaAsyncProducer {
   retries_channel : Array[ProducerMessage]
   is_closed : Bool
   txn_status : ProducerTxnStatusFlag
-} derive(Show, ToJson)
+} derive(Show)
 
 ///|
 /// Create a new async producer
@@ -275,7 +275,7 @@ pub fn async_producer_add_message_to_txn(
 /// Sync producer implementation
 pub struct KafkaSyncProducer {
   async_producer : KafkaAsyncProducer
-} derive(Show, ToJson)
+} derive(Show)
 
 ///|
 /// Create a new sync producer

@@ -104,7 +104,7 @@ pub struct Broker {
   state : BrokerState
   conf : @core.Config // This will be defined in core
   metrics : BrokerMetrics
-} derive(Show, ToJson)
+} derive(Show)
 
 ///|
 /// Create a new broker instance

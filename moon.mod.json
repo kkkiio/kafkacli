@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "deps": {
     "Yoorkin/ArgParser": "0.1.11",
-    "moonbitlang/x": "0.4.34",
-    "moonbitlang/async": "0.8.1"
+    "moonbitlang/x": "0.4.35",
+    "moonbitlang/async": "0.10.2"
   },
   "readme": "README.md",
   "repository": "",

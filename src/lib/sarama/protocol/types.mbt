@@ -60,18 +60,12 @@ pub(all) struct BrokerMetadata {
   mut host : String
   mut port : Int
   mut rack : String?
-  mut version : Int // 添加version字段用于编码解码
+  mut version : Int16 // 添加version字段用于编码解码
 } derive(Show, ToJson, Eq)
 
 ///|
-/// Join host and port into address string
-pub fn join_host_port(host : String, port : Int) -> String {
-  "\{host}:\{port}"
-}
-
-///|
 /// Encode broker metadata to packet encoder
-pub impl Encoder for BrokerMetadata with encode(self, pe) {
+pub impl KafkaEncoder for BrokerMetadata with encode(self, pe) {
   pe.put_int(self.id)
   pe.put_string(self.host)
   pe.put_int(self.port)
@@ -93,7 +87,6 @@ pub fn[T : PacketDecoder] BrokerMetadata::decode(
   pd : T,
   version : Int16,
 ) -> BrokerMetadata raise PacketDecodingError {
-  let version = version.to_int()
   let id = pd.get_int()
   let host = pd.get_string()
   let port = pd.get_int()
