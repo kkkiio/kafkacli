@@ -107,6 +107,37 @@ async fn main {
       }
       list_topics(bootstrap_servers, topics)
     }
+    "list-consumer-groups" => {
+      let usage =
+        #| Kafka consumer groups CLI tool
+        #| usage:
+        #|      kafkacli list-consumer-groups --bootstrap-server <broker>[,<broker>...] [--describe]
+        #|
+      let bootstrap_servers = @ref.new("")
+      let describe = @ref.new(false)
+      @ArgParser.parse(
+        [
+          (
+            "--bootstrap-server",
+            "-b",
+            Set_string(bootstrap_servers),
+            "bootstrap servers",
+          ),
+          ("--describe", "-d", Set(describe), "show committed offsets"),
+        ],
+        fn(_) {  },
+        usage,
+        argv,
+      )
+      let bootstrap_servers = match bootstrap_servers.val {
+        "" => {
+          println("bootstrap server is required")
+          return
+        }
+        _ => bootstrap_servers.val.split(",").map(_.to_string()).to_array()
+      }
+      list_consumer_groups(bootstrap_servers, describe.val)
+    }
     "api-versions" => {
       let usage =
         #| Kafka API versions CLI tool

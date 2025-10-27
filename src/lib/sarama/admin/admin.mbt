@@ -183,25 +183,6 @@ pub struct Acl {
 } derive(Show, ToJson)
 
 ///|
-/// Resource with ACLs structure
-pub struct ResourceAcls {
-  resource : AclResource
-  acls : Array[Acl]
-} derive(Show, ToJson)
-
-///|
-/// ACL filter structure
-pub struct AclFilter {
-  resource_type : AclResourceType?
-  name : String?
-  pattern_type : AclResourcePatternType?
-  principal : String?
-  host : String?
-  operation : AclOperation?
-  permission_type : AclPermissionType?
-} derive(Show, ToJson)
-
-///|
 /// Topic detail structure
 pub(all) struct TopicDetail {
   mut num_partitions : Int
@@ -311,115 +292,6 @@ pub struct IncrementalAlterConfigsEntry {
 } derive(Show, ToJson)
 
 ///|
-/// Cluster admin interface
-pub trait ClusterAdmin {
-  /// Create a new topic
-  create_topic(topic : String, detail : TopicDetail, validate_only : Bool) -> Result[
-    Unit,
-    String,
-  ]
-
-  /// List all topics
-  list_topics() -> Result[Map[String, TopicDetail], String]
-
-  /// Describe specific topics
-  describe_topics(topics : Array[String]) -> Result[
-    Array[TopicMetadata],
-    String,
-  ]
-
-  /// Delete a topic
-  delete_topic(topic : String) -> Result[Unit, String]
-
-  /// Create partitions for a topic
-  create_partitions(
-    topic : String,
-    count : Int,
-    assignment : Array[Array[Int]],
-    validate_only : Bool,
-  ) -> Result[Unit, String]
-
-  /// Alter partition reassignments
-  alter_partition_reassignments(topic : String, assignment : Array[Array[Int]]) -> Result[
-    Unit,
-    String,
-  ]
-
-  /// List partition reassignments
-  list_partition_reassignments(topic : String, partitions : Array[Int]) -> Result[
-    Map[String, Map[Int, PartitionReplicaReassignmentsStatus]],
-    String,
-  ]
-
-  /// Delete records
-  delete_records(topic : String, partition_offsets : Map[Int, Int64]) -> Result[
-    Unit,
-    String,
-  ]
-
-  /// Describe config for a resource
-  describe_config(resource : ConfigResource) -> Result[
-    Array[ConfigEntry],
-    String,
-  ]
-
-  /// Alter config for a resource
-  alter_config(
-    resource_type : ConfigResourceType,
-    name : String,
-    entries : Map[String, String],
-    validate_only : Bool,
-  ) -> Result[Unit, String]
-
-  /// Incremental alter config for a resource
-  incremental_alter_config(
-    resource_type : ConfigResourceType,
-    name : String,
-    entries : Map[String, IncrementalAlterConfigsEntry],
-    validate_only : Bool,
-  ) -> Result[Unit, String]
-
-  /// Create a single ACL (deprecated)
-  create_acl(resource : AclResource, acl : Acl) -> Result[Unit, String]
-
-  /// Create multiple ACLs
-  create_acls(resource_acls : Array[ResourceAcls]) -> Result[Unit, String]
-
-  /// List ACLs with filter
-  list_acls(filter : AclFilter) -> Result[Array[ResourceAcls], String]
-
-  /// Delete ACLs with filter
-  delete_acls(filters : Array[AclFilter]) -> Result[Unit, String]
-
-  /// Describe user SCRAM credentials
-  describe_user_scram_credentials(users : Array[String]) -> Result[
-    Array[UserScramCredentialsDescription],
-    String,
-  ]
-
-  /// Alter user SCRAM credentials
-  alter_user_scram_credentials(
-    upsertions : Array[UserScramCredentialUpsertion],
-    deletions : Array[UserScramCredentialDeletion],
-  ) -> Result[Unit, String]
-
-  /// Describe client quotas
-  describe_client_quotas(
-    components : Array[ClientQuotaFilterComponent],
-    strict : Bool,
-  ) -> Result[Array[ClientQuotaDescription], String]
-
-  /// Alter client quotas
-  alter_client_quotas(
-    entries : Array[ClientQuotaAlterEntry],
-    validate_only : Bool,
-  ) -> Result[Unit, String]
-
-  /// Close the admin client
-  close() -> Result[Unit, String]
-}
-
-///|
 /// Topic metadata structure (simplified for admin)
 pub struct TopicMetadata {
   error : String?
@@ -495,6 +367,26 @@ pub struct ClientQuotaAlterEntry {
 } derive(Show, ToJson)
 
 ///|
+/// Summary information for a consumer group
+pub struct ConsumerGroupSummary {
+  group_id : String
+  protocol_type : String
+  state : String
+  group_type : String
+} derive(Show, ToJson)
+
+///|
+/// Offset detail for a consumer group partition
+pub struct ConsumerGroupOffset {
+  topic : String
+  partition : Int
+  committed_offset : Int64
+  committed_leader_epoch : Int
+  metadata : String?
+  error_code : Int16
+} derive(Show, ToJson)
+
+///|
 /// Cluster admin implementation
 pub struct KafkaClusterAdmin {
   client : @client.KafkaClient
@@ -551,6 +443,53 @@ async fn[T : @protocol.ProtocolBody] send_kafka_request(
     err => fail("failed to read response body: \{err}")
   }
   response
+}
+
+///|
+pub fn build_consumer_group_summaries(
+  response : @protocol.ListGroupsResponse,
+) -> Array[ConsumerGroupSummary] {
+  let summaries = Array::new()
+  for group_id, protocol_type in response.groups {
+    let group_data = response.groups_data.get(group_id)
+    let state = match group_data {
+      Some(data) => data.group_state
+      None => ""
+    }
+    let group_type = match group_data {
+      Some(data) => data.group_type
+      None => ""
+    }
+    summaries.push(ConsumerGroupSummary::{
+      group_id,
+      protocol_type,
+      state,
+      group_type,
+    })
+  }
+  summaries
+}
+
+///|
+pub fn build_consumer_group_offsets(
+  response : @protocol.OffsetFetchResponse,
+) -> Array[ConsumerGroupOffset] {
+  let offsets = Array::new()
+  for topic_entry in response.topics {
+    let topic_name = topic_entry.name
+    let partitions = topic_entry.partitions
+    for partition in partitions {
+      offsets.push(ConsumerGroupOffset::{
+        topic: topic_name,
+        partition: partition.partition_index,
+        committed_offset: partition.committed_offset,
+        committed_leader_epoch: partition.committed_leader_epoch,
+        metadata: partition.metadata,
+        error_code: partition.error_code,
+      })
+    }
+  }
+  offsets
 }
 
 ///|
@@ -651,6 +590,93 @@ pub async fn cluster_admin_list_topics_filtered(
   topics : Array[String],
 ) -> Map[String, TopicDetail] {
   cluster_admin_list_topics_impl(admin, topics)
+}
+
+///|
+fn error_to_string(err : Error) -> String {
+  "\{err}"
+}
+
+///|
+async fn cluster_admin_list_consumer_groups_impl(
+  admin : KafkaClusterAdmin,
+) -> Array[ConsumerGroupSummary] {
+  if admin.is_closed {
+    fail("cluster admin is closed")
+  }
+  let brokers = @client.kafka_client_brokers(admin.client)
+  if brokers.length() == 0 {
+    fail("no brokers available")
+  }
+  let broker = brokers[0]
+  let socket = open_connection(broker)
+  defer socket.close()
+  let request = @protocol.ListGroupsRequest::with_version(5)
+  let request_version = request.version()
+  let envelope = @protocol.Request::{
+    correlation_id: 1,
+    client_id: admin.conf.client_id,
+    body: request,
+  }
+  let raw_response = send_kafka_request(socket, envelope)
+  guard raw_response is [u32be(_), .. payload] else {
+    fail("invalid ListGroupsResponse payload")
+  }
+  let response = @protocol.versioned_decode(
+    payload,
+    @protocol.ListGroupsResponse::decode,
+    request_version,
+  )
+  if response.error != @protocol.ErrNoError {
+    fail(@protocol.KErrorCode(response.error).to_string())
+  }
+  let summaries = build_consumer_group_summaries(response)
+  summaries
+}
+
+///|
+pub async fn cluster_admin_list_consumer_groups(
+  admin : KafkaClusterAdmin,
+) -> Array[ConsumerGroupSummary] {
+  cluster_admin_list_consumer_groups_impl(admin)
+}
+
+///|
+pub async fn cluster_admin_describe_consumer_group_offsets(
+  admin : KafkaClusterAdmin,
+  group_ids : Array[String],
+) -> Map[String, Array[ConsumerGroupOffset]] {
+  if admin.is_closed {
+    fail("cluster admin is closed")
+  }
+  let result : Map[String, Array[ConsumerGroupOffset]] = Map::new()
+  for group_id in group_ids {
+    let broker = @client.kafka_client_coordinator(admin.client, group_id)
+    let socket = open_connection(broker)
+    defer socket.close()
+    let request = @protocol.OffsetFetchRequest::default(group_id.to_string())
+    let request_version = request.version()
+    let envelope = @protocol.Request::{
+      correlation_id: 1,
+      client_id: admin.conf.client_id,
+      body: request,
+    }
+    let raw_response = send_kafka_request(socket, envelope)
+    guard raw_response is [u32be(_), .. payload] else {
+      fail("invalid OffsetFetchResponse payload")
+    }
+    let response = @protocol.versioned_decode(
+      payload,
+      @protocol.OffsetFetchResponse::decode,
+      request_version,
+    )
+    if response.error_code != @protocol.ErrNoError {
+      fail(@protocol.KErrorCode(response.error_code).to_string())
+    }
+    let offsets = build_consumer_group_offsets(response)
+    result[group_id] = offsets
+  }
+  result
 }
 
 ///|
@@ -763,36 +789,6 @@ pub fn cluster_admin_create_acl(
   acl : Acl,
 ) -> Result[Unit, String] {
   // TODO: Implement actual ACL creation logic
-  Ok(())
-}
-
-///|
-/// Create multiple ACLs (placeholder implementation)
-pub fn cluster_admin_create_acls(
-  admin : KafkaClusterAdmin,
-  resource_acls : Array[ResourceAcls],
-) -> Result[Unit, String] {
-  // TODO: Implement actual ACLs creation logic
-  Ok(())
-}
-
-///|
-/// List ACLs (placeholder implementation)
-pub fn cluster_admin_list_acls(
-  admin : KafkaClusterAdmin,
-  filter : AclFilter,
-) -> Result[Array[ResourceAcls], String] {
-  // TODO: Implement actual ACL listing logic
-  Ok([])
-}
-
-///|
-/// Delete ACLs (placeholder implementation)
-pub fn cluster_admin_delete_acls(
-  admin : KafkaClusterAdmin,
-  filters : Array[AclFilter],
-) -> Result[Unit, String] {
-  // TODO: Implement actual ACL deletion logic
   Ok(())
 }
 

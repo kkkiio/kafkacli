@@ -100,6 +100,47 @@ moon test -p package   # 测试特定包
 - 快照测试不填写 `content` 参数，运行 `moon test --update` 自动生成
 - 使用 `@json.inspect()` 处理复杂结构
 
+#### 本地手动测试
+
+按照 `agents/specs/functional-test/design.md` 中的架构设计，可以在本地通过以下步骤复现集成环境并手动验证 CLI：
+
+1. 启动容器化测试环境（首次启动需在项目根目录生成 Kafka 镜像）：
+
+   ```bash
+   cd test/
+   docker compose up -d
+   ```
+
+2. 为五个 Kafka Broker 创建或刷新 Toxiproxy 代理，确保宿主机端口 `29091-29095` 映射正确：
+
+   ```bash
+   for i in 1 2 3 4 5; do
+     curl -sS -XDELETE "http://127.0.0.1:8474/proxies/kafka-${i}-proxy" >/dev/null
+     cat <<EOF | curl -sS -XPOST "http://127.0.0.1:8474/proxies" \
+       -H "Content-Type: application/json" -d @- >/dev/null
+   {
+     "name": "kafka-${i}-proxy",
+     "listen": "0.0.0.0:2909${i}",
+     "upstream": "kafka-${i}:2909${i}",
+     "enabled": true
+   }
+   EOF
+   done
+   ```
+
+   也可以进入 `toxiproxy` 容器使用 `toxiproxy-cli` 执行同等操作。
+
+3. 运行 CLI 进行功能验证，例如列出主题或拉取 API 版本，确认能够通过代理访问集群：
+
+   ```bash
+   moon run src/cmd/kafkacli -- list-topics --bootstrap-server 127.0.0.1:29091
+   moon run src/cmd/kafkacli -- api-versions --bootstrap-server 127.0.0.1:29091
+   ```
+
+4. 需要模拟网络故障时，可直接向指定代理添加 toxic 或使用 `curl http://127.0.0.1:8474/proxies` 检查状态，验证 CLI 的异常处理逻辑。
+
+5. 手动验证结束后在 `test/` 目录执行 `docker compose down` 清理环境，避免端口占用。
+
 ### Git Workflow
 
 #### 分支策略

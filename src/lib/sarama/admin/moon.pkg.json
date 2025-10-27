@@ -5,5 +5,8 @@
     "kkkiio/kafkacli/lib/sarama/protocol",
     "moonbitlang/async/io",
     "moonbitlang/async/socket"
+  ],
+  "test-import": [
+    "moonbitlang/async"
   ]
 }
